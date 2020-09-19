@@ -5,13 +5,76 @@
 
 void ASDTAIController::Tick(float deltaTime)
 {
-	MovePawn(deltaTime, GetPawn()->GetActorRightVector());
+	//logic to assign state
+	if (IsInCollisionWithWall())//logic for detecting if in collision with wall
+	{
+
+	}
+	else if (IsTrapInTrajectory())//logic for detecting if a death trap is in the current trajectory
+	{
+
+	}
+	else if (IsPlayerDetected())//logic for spotting player
+	{
+		m_state = chaseState;
+	}
+	else if (IsBallDetected())//logic for spotting power-up balls
+	{
+
+	}
+	else 
+	{
+		m_state = moveForwardState;
+	}
+
+
+	//apply state
+	if (m_state == moveForwardState)
+	{
+		MovePawn(GetPawn()->GetActorForwardVector(), deltaTime);
+	}
+	else if (m_state == chaseState)
+	{
+
+	}
+	else if (m_state == fleeState)
+	{
+
+	}
 }
 
-void ASDTAIController::MovePawn(float deltaTime, FVector direction)
+//Helper Functions
+
+bool ASDTAIController::IsInCollisionWithWall()
 {
-	currentSpeed += m_acceleration*deltaTime;
+	return false;
+}
+
+bool ASDTAIController::IsTrapInTrajectory()
+{
+	return false;
+}
+
+bool ASDTAIController::IsPlayerDetected()
+{
+	return false;
+}
+
+bool ASDTAIController::IsPlayerPoweredUp()
+{
+	return false;
+}
+
+bool ASDTAIController::IsBallDetected()
+{
+	return false;
+}
+
+void ASDTAIController::MovePawn(FVector direction, float deltaTime)
+{
+	m_currentSpeed += m_acceleration*deltaTime;
 	GetPawn()->AddMovementInput(direction, m_currentSpeed/m_maxSpeed);
+	GetPawn()->SetActorRotation(direction.ToOrientationQuat());
 }
 
 
