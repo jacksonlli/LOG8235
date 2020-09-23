@@ -22,16 +22,20 @@ public:
 	bool IsPlayerPoweredUp();
 	bool IsBallDetected();
 	void MovePawn(FVector direction, float deltaTime);
+	virtual void AvoidWall(float deltaTime);
 
 private:
 	float m_currentSpeed = 0.f;
 	float m_maxSpeed = 1000.f;
 	float m_acceleration = 200.f;
 	//STATE INDEXES
-	const int moveForwardState = 0;
-	const int chaseState = 1;
-	const int fleeState = 2;
+	enum class Stage
+	{
+		moveForwardState,
+		chaseState,
+		fleeState,
+		avoidObstacleState
+	};
 	//DEFAULT CURRENT STATE
-	int m_state = moveForwardState;
-
+	Stage m_state = Stage::moveForwardState;
 };
