@@ -24,11 +24,11 @@ void ASDTAIController::Tick(float deltaTime)
 		{
 			if (IsAgentHeadingTowardsPlayer())//logic to check if agent is walking towards the player
 			{
-				m_state = Stage::fleeState;
+				m_state = Stage::fleeState;//si l'agent se dirige vers le joeur en power-up, on le tourne
 			}
 			else
 			{
-				m_state = Stage::moveForwardState;
+				m_state = Stage::moveForwardState;//si l'agent si dirige déjà pour s'éloigner, on le laisse
 			}
 		}
 		else
@@ -173,7 +173,8 @@ bool ASDTAIController::IsBallDetected()
 void ASDTAIController::MovePawn(FVector direction, float deltaTime)
 {
 	m_currentSpeed += m_acceleration*deltaTime;
-	GetPawn()->AddMovementInput(direction, FMath::Min(m_currentSpeed, m_maxSpeed));
+	float scaleValue = m_currentSpeed / m_maxSpeed;
+	GetPawn()->AddMovementInput(direction, FMath::Min(scaleValue, 1.f));//le 2e parametre de addMovementInput est une constante entre -1 et 1 utilisé pour scale la vitesse CharacterMouvementComponent
 	GetPawn()->SetActorRotation(direction.ToOrientationQuat());
 }
 
