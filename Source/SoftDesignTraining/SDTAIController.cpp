@@ -5,6 +5,7 @@
 #include "DrawDebugHelpers.h"
 #include "CollisionShape.h"
 #include "PhysicsHelpers.h"
+#include "SoftDesignTrainingMainCharacter.h"
 
 void ASDTAIController::Tick(float deltaTime)
 {
@@ -19,7 +20,22 @@ void ASDTAIController::Tick(float deltaTime)
 	}
 	else if (IsPlayerDetected())//logic for spotting player
 	{
-		m_state = Stage::chaseState;
+		if (IsPlayerPoweredUp())//logic for checking player status
+		{
+			if (IsAgentHeadingTowardsPlayer())//logic to check if agent is walking towards the player
+			{
+				m_state = Stage::fleeState;
+			}
+			else
+			{
+				m_state = Stage::moveForwardState;
+			}
+		}
+		else
+		{
+			m_state = Stage::chaseState;
+		}
+		
 	}
 	else if (IsBallDetected())//logic for spotting power-up balls
 	{
@@ -36,17 +52,21 @@ void ASDTAIController::Tick(float deltaTime)
 	{
 		case Stage::moveForwardState:
 		{
+
+			
 			MovePawn(GetPawn()->GetActorForwardVector(), deltaTime);
 		}
 		break;
 		case Stage::chaseState:
 		{
-
+			FVector2D toPlayer = FVector2D(GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation() - GetPawn()->GetActorLocation());
+			MovePawn(FVector(toPlayer, 0.f), deltaTime);
 		}
 		break;
 		case Stage::fleeState:
 		{
-
+			FVector2D toPlayer = FVector2D(GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation() - GetPawn()->GetActorLocation());
+			MovePawn(-FVector(toPlayer, 0.f), deltaTime);
 		}
 		break;
 		case Stage::avoidObstacleState:
@@ -94,14 +114,57 @@ bool ASDTAIController::IsTrapInTrajectory()
 
 bool ASDTAIController::IsPlayerDetected()
 {
-	return false;
+	if (GetWorld()->GetFirstPlayerController()->GetPawn() == nullptr)
+	{
+		return false;
+	}
+	else
+	{
+		bool isPlayerInRange = FVector2D(GetPawn()->GetActorLocation() - GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()).Size() <= m_visionRadius;
+		
+		FHitResult outHit;
+		bool wallBetweenPlayerAndAgent = GetWorld()->LineTraceSingleByObjectType(outHit, GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation(), ECC_WorldStatic);
+		
+		//debug
+		if (isPlayerInRange) 
+		{ 
+			DrawDebugCircle(GetWorld(), GetPawn()->GetActorLocation(), m_visionRadius, 50, FColor::Green, false, -1.f, 0, 5.f, FVector(1, 0, 0), FVector(0, 1, 0), false);
+			if (wallBetweenPlayerAndAgent)
+			{
+				DrawDebugDirectionalArrow(GetWorld(), GetPawn()->GetTargetLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation(),700.f, FColor::Red, false, -1, 0, 10.f);
+			}
+			else
+			{
+				DrawDebugDirectionalArrow(GetWorld(), GetPawn()->GetTargetLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation(),700.f, FColor::Emerald, false, -1, 0, 10.f);
+			}
+		}
+		else 
+		{ 
+			DrawDebugCircle(GetWorld(), GetPawn()->GetActorLocation(), m_visionRadius, 50, FColor::Red, false, -1.f, 0, 5.f, FVector(1, 0, 0), FVector(0, 1, 0), false);
+		}
+
+		return !wallBetweenPlayerAndAgent && isPlayerInRange;
+	}
 }
 
 bool ASDTAIController::IsPlayerPoweredUp()
 {
-	return false;
+	
+	ASoftDesignTrainingMainCharacter* player = dynamic_cast<ASoftDesignTrainingMainCharacter*>(GetWorld()->GetFirstPlayerController()->GetPawn());
+	return player->IsPoweredUp();
 }
+bool ASDTAIController::IsAgentHeadingTowardsPlayer()
+{
+	float theta = 30.f/180.f*PI;//angle à chaque côté de la direction forward qui, lors de la détection d'un joueur powered-up dans la zone, tourne l'agent pour fuire
+	//debug
+	DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) + GetPawn()->GetActorRightVector()*sin(theta))*600.f, FColor::Orange, false, -1.f, 0, 10.f);
+	DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) - GetPawn()->GetActorRightVector()*sin(theta))*600.f, FColor::Orange, false, -1.f, 0, 10.f);
 
+	//logic
+	FVector2D currentDirection = FVector2D(GetPawn()->GetActorForwardVector());
+	FVector2D toPlayer = FVector2D(GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation() - GetPawn()->GetActorLocation()).GetSafeNormal();
+	return FVector2D::DotProduct(currentDirection, toPlayer) > cos(theta);
+}
 bool ASDTAIController::IsBallDetected()
 {
 	return false;

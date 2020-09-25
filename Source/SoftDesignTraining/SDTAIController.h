@@ -20,6 +20,7 @@ public:
 	bool IsTrapInTrajectory();
 	bool IsPlayerDetected();
 	bool IsPlayerPoweredUp();
+	bool IsAgentHeadingTowardsPlayer();
 	bool IsBallDetected();
 	void MovePawn(FVector direction, float deltaTime);
 	virtual void AvoidWall(float deltaTime);
@@ -28,6 +29,7 @@ private:
 	float m_currentSpeed = 0.f;
 	float m_maxSpeed = 1000.f;
 	float m_acceleration = 200.f;
+	float m_visionRadius = 600.f;
 	//STATE INDEXES
 	enum class Stage
 	{
