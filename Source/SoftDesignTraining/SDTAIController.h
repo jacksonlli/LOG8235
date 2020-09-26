@@ -25,11 +25,21 @@ public:
 	virtual void AvoidWall(float deltaTime);
 	void ChooseSide(float deltaTime);
 
-private:
-	float m_currentSpeed = 0.f;
-	float m_maxSpeed = 1000.f;
-	float m_acceleration = 200.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+	//Le maxSpeed de l'agent est un seuil de vitesse mesuré en pourcentage de la vitesse CharacterMovementComponent (%). Toutes valeurs plus grandes que 100, serait traitées comme 100. Par exemple, avec une valeur de 25, l'agent se déplacerait au plus vite à un quart de la vitesse CharacterMovementComponent.
+	float m_maxSpeed = 70.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+	//L'acceleration de l'agent est mesuré en pourcentage de la vitesse CharacterMovementComponent par seconde (%/s). Par exemple, avec valeur de 25, un agent immobile atteindra la vitesse CharacterMovementComponent en 4 secondes.
+	float m_acceleration = 20.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+	//La distance de détection des agents est mesuré en unité de distance de UE4.
 	float m_visionRadius = 600.f;
+
+private:
+	float m_currentSpeed = 0.f;//mesuré en pourcentage de la vitesse CharacterMovementComponent, valeur entre 0 et 100
+
 	//STATE INDEXES
 	enum class Stage
 	{

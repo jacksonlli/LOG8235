@@ -167,8 +167,8 @@ bool ASDTAIController::IsAgentHeadingTowardsPlayer()
 {
 	float theta = 30.f / 180.f*PI;//angle à chaque côté de la direction forward qui, lors de la détection d'un joueur powered-up dans la zone, tourne l'agent pour fuire
 	//debug
-	DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) + GetPawn()->GetActorRightVector()*sin(theta))*600.f, FColor::Orange, false, -1.f, 0, 10.f);
-	DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) - GetPawn()->GetActorRightVector()*sin(theta))*600.f, FColor::Orange, false, -1.f, 0, 10.f);
+	DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) + GetPawn()->GetActorRightVector()*sin(theta))*m_visionRadius, FColor::Orange, false, -1.f, 0, 10.f);
+	DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) - GetPawn()->GetActorRightVector()*sin(theta))*m_visionRadius, FColor::Orange, false, -1.f, 0, 10.f);
 
 	//logic
 	FVector2D currentDirection = FVector2D(GetPawn()->GetActorForwardVector());
@@ -182,9 +182,9 @@ bool ASDTAIController::IsBallDetected()
 
 void ASDTAIController::MovePawn(FVector direction, float deltaTime)
 {
+	//voir definitions de m_currentSpeed, m_maxSpeed et m_acceleration dans SDTAIController.h
 	m_currentSpeed += m_acceleration * deltaTime;
-	float scaleValue = m_currentSpeed / m_maxSpeed;
-	GetPawn()->AddMovementInput(direction.GetSafeNormal(), FMath::Min(scaleValue, 1.f));//le 2e parametre de addMovementInput est une constante entre -1 et 1 utilisé pour scale la vitesse CharacterMouvementComponent
+	GetPawn()->AddMovementInput(direction.GetSafeNormal(), FMath::Min(m_currentSpeed, m_maxSpeed)/100.f);//le 2e parametre de addMovementInput est une constante entre -1 et 1 utilisé pour scale la vitesse CharacterMouvementComponent
 	GetPawn()->SetActorRotation(direction.ToOrientationQuat());
 }
 
