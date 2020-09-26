@@ -8,22 +8,22 @@
 #include "SDTAIController.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS(ClassGroup = AI, config = Game)
 class SOFTDESIGNTRAINING_API ASDTAIController : public AAIController
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 public:
-    virtual void Tick(float deltaTime) override;
-	bool IsInCollisionWithWall();
-	bool IsTrapInTrajectory();
+	virtual void Tick(float deltaTime) override;
+	bool IsWallOrTrapInTrajectory();
 	bool IsPlayerDetected();
 	bool IsPlayerPoweredUp();
 	bool IsAgentHeadingTowardsPlayer();
 	bool IsBallDetected();
 	void MovePawn(FVector direction, float deltaTime);
 	virtual void AvoidWall(float deltaTime);
+	void ChooseSide(float deltaTime);
 
 private:
 	float m_currentSpeed = 0.f;
@@ -40,4 +40,5 @@ private:
 	};
 	//DEFAULT CURRENT STATE
 	Stage m_state = Stage::moveForwardState;
+	int choosen_side = 0;
 };
