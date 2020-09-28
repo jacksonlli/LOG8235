@@ -15,6 +15,11 @@ public:
     virtual void BeginPlay() override;
     virtual void OnCollectPowerUp() {};
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+	int nb_pickup = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+	int nb_death = 0;
+
 protected:
     UFUNCTION()
     virtual void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

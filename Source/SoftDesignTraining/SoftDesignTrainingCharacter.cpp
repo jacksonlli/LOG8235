@@ -24,14 +24,16 @@ void ASoftDesignTrainingCharacter::BeginPlay()
 void ASoftDesignTrainingCharacter::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
     if (OtherComponent->GetCollisionObjectType() == COLLISION_DEATH_OBJECT)
-    {
+	{
         SetActorLocation(m_StartingPosition);
+		nb_death = nb_death + 1;
     }
     else if(ASDTCollectible* collectibleActor = Cast<ASDTCollectible>(OtherActor))
     {
         if (!collectibleActor->IsOnCooldown())
         {
             OnCollectPowerUp();
+			nb_pickup = nb_pickup + 1;
         }
 
         collectibleActor->Collect();
