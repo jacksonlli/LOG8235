@@ -121,18 +121,18 @@ bool ASDTAIController::IsWallOrTrapInTrajectory() // Renvoie True si un mur ou u
 	return World->SweepMultiByObjectType(outHits, pawn->GetActorLocation(), pawn->GetActorLocation() + pawn->GetActorForwardVector() * 200.0f, FQuat::Identity, objectQueryParams, collisionShape, queryParams);
 }
 
-bool ASDTAIController::IsPlayerDetected()
+bool ASDTAIController::IsPlayerDetected()//détecter si l'agent voit le joueur
 {
-	if (GetWorld()->GetFirstPlayerController()->GetPawn() == nullptr)
+	if (GetWorld()->GetFirstPlayerController()->GetPawn() == nullptr)//détecter si on est en mode simulation
 	{
 		return false;
 	}
 	else
 	{
-		bool isPlayerInRange = FVector2D(GetPawn()->GetActorLocation() - GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()).Size() <= m_visionRadius;
+		bool isPlayerInRange = FVector2D(GetPawn()->GetActorLocation() - GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()).Size() <= m_visionRadius;//voir si le joueur est à l'intérieur de du cercle de vision de l'agent
 
 		FHitResult outHit;
-		bool wallBetweenPlayerAndAgent = GetWorld()->LineTraceSingleByObjectType(outHit, GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation(), ECC_WorldStatic);
+		bool wallBetweenPlayerAndAgent = GetWorld()->LineTraceSingleByObjectType(outHit, GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation(), ECC_WorldStatic);//voir si il y a un mur entre le joueur et l'agent
 
 		//debug
 		/*if (isPlayerInRange)
@@ -157,22 +157,22 @@ bool ASDTAIController::IsPlayerDetected()
 	}
 }
 
-bool ASDTAIController::IsPlayerPoweredUp()
+bool ASDTAIController::IsPlayerPoweredUp()//voir si le joueur est powered up ou non, retourne true si oui.
 {
 
 	ASoftDesignTrainingMainCharacter* player = dynamic_cast<ASoftDesignTrainingMainCharacter*>(GetWorld()->GetFirstPlayerController()->GetPawn());
 	return player->IsPoweredUp();
 }
-bool ASDTAIController::IsAgentHeadingTowardsPlayer()
+bool ASDTAIController::IsAgentHeadingTowardsPlayer()//voir si l'agent se dirige vers le joueur avec un cône de vision. 
 {
 	float theta = 30.f / 180.f*PI;//angle à chaque côté de la direction forward qui, lors de la détection d'un joueur powered-up dans la zone, tourne l'agent pour fuire
 	//debug
 	//DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) + GetPawn()->GetActorRightVector()*sin(theta))*m_visionRadius, FColor::Orange, false, -1.f, 0, 10.f);
 	//DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) - GetPawn()->GetActorRightVector()*sin(theta))*m_visionRadius, FColor::Orange, false, -1.f, 0, 10.f);
 
-	//logic
+	//logique
 	FVector2D currentDirection = FVector2D(GetPawn()->GetActorForwardVector());
-	FVector2D toPlayer = FVector2D(GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation() - GetPawn()->GetActorLocation()).GetSafeNormal();
+	FVector2D toPlayer = FVector2D(GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation() - GetPawn()->GetActorLocation()).GetSafeNormal();//cône de vision
 	return FVector2D::DotProduct(currentDirection, toPlayer) > cos(theta);
 }
 bool ASDTAIController::IsBallDetected()
@@ -180,7 +180,7 @@ bool ASDTAIController::IsBallDetected()
 	return false;
 }
 
-void ASDTAIController::MovePawn(FVector direction, float deltaTime)
+void ASDTAIController::MovePawn(FVector direction, float deltaTime)//bouge l'agent vers la direction choisie avec une acceleration constante jusqu'à une vitesse max
 {
 	//voir definitions de m_currentSpeed, m_maxSpeed et m_acceleration dans SDTAIController.h
 	m_currentSpeed += m_acceleration * deltaTime;
@@ -188,7 +188,7 @@ void ASDTAIController::MovePawn(FVector direction, float deltaTime)
 	GetPawn()->SetActorRotation(direction.ToOrientationQuat());
 }
 
-void ASDTAIController::ChooseSide(float deltaTime)
+void ASDTAIController::ChooseSide(float deltaTime)//détermine quel côté l'agent tourne en modifiant la variable chosenSide
 {
 	UWorld* World = GetWorld();
 	APawn* pawn = GetPawn();
@@ -247,7 +247,7 @@ void ASDTAIController::ChooseSide(float deltaTime)
 
 }
 
-void ASDTAIController::AvoidWall(float deltaTime)
+void ASDTAIController::AvoidWall(float deltaTime)//évitement de mur et des pièges
 {
 	UWorld* World = GetWorld();
 	APawn* pawn = GetPawn();
