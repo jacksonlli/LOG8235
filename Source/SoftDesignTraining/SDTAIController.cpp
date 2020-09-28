@@ -36,7 +36,7 @@ void ASDTAIController::Tick(float deltaTime)
 	}
 	else if (IsBallDetected())//logic for spotting power-up balls
 	{
-		choosen_side = 0;
+		choosen_side = 0;	// côté duquel le pawn va tourner face à un obstacle
 	}
 	else
 	{
@@ -50,12 +50,14 @@ void ASDTAIController::Tick(float deltaTime)
 	{
 	case Stage::moveForwardState:
 	{
+		// Vecteurs unitaires haut/droite/bas/gauche du repère global
 		FVector2D WorldVectors[4];
 		WorldVectors[0] = FVector2D(0, 1);
 		WorldVectors[1] = FVector2D(1, 0);
 		WorldVectors[2] = FVector2D(0, -1);
 		WorldVectors[3] = FVector2D(-1, 0);
 
+		// Choix du vecteur global le plus proche du vecteur vitesse actuel
 		float dotScore = -100000.0f;
 		FVector2D bestWorldVector;
 
@@ -67,26 +69,30 @@ void ASDTAIController::Tick(float deltaTime)
 				bestWorldVector = WorldVectors[i];
 			}
 		}
+		// Tourner le pawn pour qu'il s'aligne progressivement sur un vecteur global
 		MovePawn(GetPawn()->GetActorForwardVector().GetSafeNormal() * 0.9f + FVector(bestWorldVector * 0.1f, 0.0f), deltaTime);
 	}
 	break;
 	case Stage::chaseState:
 	{
+		// Déplacement orienté vers le joueur
 		FVector2D toPlayer = FVector2D(GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation() - GetPawn()->GetActorLocation());
 		MovePawn(FVector(toPlayer, 0.f), deltaTime);
 	}
 	break;
 	case Stage::fleeState:
 	{
+		// Déplacement orienté dans la direction opposée au joueur
 		FVector2D toPlayer = FVector2D(GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation() - GetPawn()->GetActorLocation());
 		MovePawn(-FVector(toPlayer, 0.f), deltaTime);
 	}
 	break;
 	case Stage::avoidObstacleState:
 	{
+		// Si aucun choix n'a déjà été fait, choisir un côté
 		if (choosen_side == 0)
 			ChooseSide(deltaTime);
-		AvoidWall(deltaTime);
+		AvoidWall(deltaTime);	// Fonction d'évitement
 	}
 	break;
 	}
@@ -94,32 +100,25 @@ void ASDTAIController::Tick(float deltaTime)
 
 //Helper Functions
 
-bool ASDTAIController::IsWallOrTrapInTrajectory()
+bool ASDTAIController::IsWallOrTrapInTrajectory() // Renvoie True si un mur ou un piège est détecté devant le pawn à une distance de 200 ou moins
 {
 	UWorld* World = GetWorld();
 	APawn* pawn = GetPawn();
 	TArray<FHitResult> outHits;
 
-	// Sans PhysicsHelpers (reproduit selon les besoins)
 	FCollisionObjectQueryParams objectQueryParams;
-	objectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-	objectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel3);
-	objectQueryParams.RemoveObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel5);
+	objectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);	// ajout des murs aux objets détectés
+	objectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel3);	// ajout des pièges
+	objectQueryParams.RemoveObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel5);	// retrait des Collectibles
 
-	FCollisionQueryParams queryParams = FCollisionQueryParams::DefaultQueryParam;
+	FCollisionQueryParams queryParams = FCollisionQueryParams::DefaultQueryParam;	// paramètres par défaut
 	FCollisionShape collisionShape;
-	collisionShape.SetCapsule(pawn->GetSimpleCollisionRadius(), pawn->GetSimpleCollisionHalfHeight());
+	collisionShape.SetCapsule(pawn->GetSimpleCollisionRadius(), pawn->GetSimpleCollisionHalfHeight());	// Capsule de collision du pawn
 
-	//DrawDebugSphere(World, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 200.0f, pawn->GetSimpleCollisionRadius(), 25, FColor::Green, false, -1.0f, 0, 5.0f);
-	DrawDebugCapsule(World, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 200.0f, pawn->GetSimpleCollisionHalfHeight(), pawn->GetSimpleCollisionRadius(), FQuat::Identity, FColor::Green, false, -1.0f, 0, 5.0f);
+	// Debug
+	//DrawDebugCapsule(World, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 300.0f, pawn->GetSimpleCollisionHalfHeight(), pawn->GetSimpleCollisionRadius(), FQuat::Identity, FColor::Green, false, -1.0f, 0, 5.0f);
 
 	return World->SweepMultiByObjectType(outHits, pawn->GetActorLocation(), pawn->GetActorLocation() + pawn->GetActorForwardVector() * 200.0f, FQuat::Identity, objectQueryParams, collisionShape, queryParams);
-
-	// Par PhysicsHelpers
-	/*DrawDebugDirectionalArrow(World, pawn->GetActorLocation(), pawn->GetActorLocation() + pawn->GetActorForwardVector() * 200.0f, 500.0f, FColor::Blue, false, -1.0f, 000, 10.0f);
-	PhysicsHelpers physicsHelper(World);
-	return physicsHelper.SphereCast(pawn->GetActorLocation() + pawn->GetActorForwardVector() * 2.1 * pawn->GetSimpleCollisionRadius(), pawn->GetActorLocation() + pawn->GetActorForwardVector() * 200.0f, pawn->GetSimpleCollisionRadius(), outHits, true);
-	*/
 }
 
 bool ASDTAIController::IsPlayerDetected()
@@ -136,7 +135,7 @@ bool ASDTAIController::IsPlayerDetected()
 		bool wallBetweenPlayerAndAgent = GetWorld()->LineTraceSingleByObjectType(outHit, GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation(), ECC_WorldStatic);
 
 		//debug
-		if (isPlayerInRange)
+		/*if (isPlayerInRange)
 		{
 			DrawDebugCircle(GetWorld(), GetPawn()->GetActorLocation(), m_visionRadius, 50, FColor::Green, false, -1.f, 0, 5.f, FVector(1, 0, 0), FVector(0, 1, 0), false);
 			if (wallBetweenPlayerAndAgent)
@@ -152,6 +151,7 @@ bool ASDTAIController::IsPlayerDetected()
 		{
 			DrawDebugCircle(GetWorld(), GetPawn()->GetActorLocation(), m_visionRadius, 50, FColor::Red, false, -1.f, 0, 5.f, FVector(1, 0, 0), FVector(0, 1, 0), false);
 		}
+		*/
 
 		return !wallBetweenPlayerAndAgent && isPlayerInRange;
 	}
@@ -167,8 +167,8 @@ bool ASDTAIController::IsAgentHeadingTowardsPlayer()
 {
 	float theta = 30.f / 180.f*PI;//angle à chaque côté de la direction forward qui, lors de la détection d'un joueur powered-up dans la zone, tourne l'agent pour fuire
 	//debug
-	DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) + GetPawn()->GetActorRightVector()*sin(theta))*m_visionRadius, FColor::Orange, false, -1.f, 0, 10.f);
-	DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) - GetPawn()->GetActorRightVector()*sin(theta))*m_visionRadius, FColor::Orange, false, -1.f, 0, 10.f);
+	//DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) + GetPawn()->GetActorRightVector()*sin(theta))*m_visionRadius, FColor::Orange, false, -1.f, 0, 10.f);
+	//DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) - GetPawn()->GetActorRightVector()*sin(theta))*m_visionRadius, FColor::Orange, false, -1.f, 0, 10.f);
 
 	//logic
 	FVector2D currentDirection = FVector2D(GetPawn()->GetActorForwardVector());
@@ -196,49 +196,51 @@ void ASDTAIController::ChooseSide(float deltaTime)
 	TArray<FHitResult> outHitsLeft;
 
 	FCollisionObjectQueryParams objectQueryParams;
-	objectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-	objectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel3);
-	objectQueryParams.RemoveObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel5);
+	objectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);	// ajout des murs aux objets détectés
+	objectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel3);	// ajout des pièges
+	objectQueryParams.RemoveObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel5);	// retrait des Collectibles
 	FCollisionQueryParams queryParams = FCollisionQueryParams::DefaultQueryParam;
 	FCollisionShape collisionShape;
-	collisionShape.SetCapsule(pawn->GetSimpleCollisionRadius(), pawn->GetSimpleCollisionHalfHeight());
+	collisionShape.SetCapsule(pawn->GetSimpleCollisionRadius(), pawn->GetSimpleCollisionHalfHeight());	// Capsule de collision du pawn
 	float const castDist = 300.0f;
 
-	//World->SweepMultiByObjectType(outHitsRight, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 100.f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 100.f + pawn->GetActorRightVector() * castDist, FQuat::Identity, objectQueryParams, collisionShape, queryParams);
-	//World->SweepMultiByObjectType(outHitsLeft, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 100.f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 100.f - pawn->GetActorRightVector() * castDist, FQuat::Identity, objectQueryParams, collisionShape, queryParams);
+	// On regarde des deux côtés du pawn pour savoir de quel côté tourner
 	World->LineTraceMultiByObjectType(outHitsRight, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 100.f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 100.f + pawn->GetActorRightVector() * castDist, objectQueryParams, queryParams);
 	World->LineTraceMultiByObjectType(outHitsLeft, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 100.f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 100.f - pawn->GetActorRightVector() * castDist, objectQueryParams, queryParams);
-	//World->SweepMultiByObjectType()
+
+	// Debug
+	/*
 	for (int32 i = 0; i < outHitsLeft.Num(); ++i)
 		DrawDebugPoint(World, outHitsLeft[i].ImpactPoint, 7.0f, FColor::Yellow, false, 1.0f, 0);
 	for (int32 i = 0; i < outHitsRight.Num(); ++i)
 		DrawDebugPoint(World, outHitsRight[i].ImpactPoint, 7.0f, FColor::Green, false, 1.0f, 0);
+	*/
 
 	bool isObstacleLeft = false;
 	bool isObstacleRight = false;
 
 	if (outHitsLeft.Num() > 0)
 	{
-		FHitResult LeftObstacle = outHitsLeft[0];
-		if (LeftObstacle.Distance < 400.f)
-			isObstacleLeft = true;
+		isObstacleLeft = true;
 	}
 		
 	if (outHitsRight.Num() > 0)
 	{
-		FHitResult RightObstacle = outHitsRight[0];
-		if (RightObstacle.Distance < 400.f)
-			isObstacleRight = true;
+		isObstacleRight = true;
 	}
 	
 	if (isObstacleLeft && isObstacleRight)
+		// On tourne à droite
 		choosen_side = -1;
 	else if (isObstacleLeft && !isObstacleRight)
+		// On tourne à droite
 		choosen_side = -1;
 	else if (!isObstacleLeft && isObstacleRight)
+		// On tourne à gauche
 		choosen_side = 1;
 	else
 	{
+		// On choisit un côté au hasard
 		choosen_side = (rand() % 2) * 2 - 1;
 		
 	}
@@ -251,46 +253,31 @@ void ASDTAIController::AvoidWall(float deltaTime)
 	APawn* pawn = GetPawn();
 	TArray<FHitResult> outHits;
 
-	// Sans PhysicsHelpers (reproduit selon les besoins)
 	FCollisionObjectQueryParams objectQueryParams;
-	objectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-	objectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel3);
-	objectQueryParams.RemoveObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel5);
+	objectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);	// ajout des murs aux objets détectés
+	objectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel3);	// ajout des pièges
+	objectQueryParams.RemoveObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel5);	// retrait des Collectibles
+
 	FCollisionQueryParams queryParams = FCollisionQueryParams::DefaultQueryParam;
 	FCollisionShape collisionShape;
-	collisionShape.SetCapsule(pawn->GetSimpleCollisionRadius(), pawn->GetSimpleCollisionHalfHeight());
-	float const castDist = 300.0f;
+	collisionShape.SetCapsule(pawn->GetSimpleCollisionRadius(), pawn->GetSimpleCollisionHalfHeight());	// Capsule de collision du pawn
+	float const castDist = 300.0f;	// distance du balayage devant le pawn
 
 	World->SweepMultiByObjectType(outHits, pawn->GetActorLocation(), pawn->GetActorLocation() + pawn->GetActorForwardVector() * castDist, FQuat::Identity, objectQueryParams, collisionShape, queryParams);
 
-	// Debug drawing
+	// Debug
+	/*
 	for (int32 i = 0; i < outHits.Num(); ++i)
 		DrawDebugPoint(World, outHits[i].ImpactPoint, 7.0f, FColor::Red, false, 1.0f, 0);
-
-	// Avec PhysicsHelpers
-	/*
-	PhysicsHelpers physicsHelper(World);
-	physicsHelper.SphereCast(pawn->GetActorLocation() + pawn->GetActorForwardVector() * 2.1 * pawn->GetSimpleCollisionRadius(), pawn->GetActorLocation() + pawn->GetActorForwardVector() * 200.0f, pawn->GetSimpleCollisionRadius(), outHits, true);
 	*/
 
 	// Calcul du nouveau vecteur de direction (faire un coefficient inv proportionnel a la distance au pawn)
 	FHitResult blockingObstacle = outHits[0];
 	FVector contactDirection;
-	/*
-	if (FVector::DotProduct((FVector::CrossProduct(FVector::UpVector, blockingObstacle.ImpactNormal.GetSafeNormal())), pawn->GetActorForwardVector()) > 0)
-	{
-		contactDirection = FVector::CrossProduct(FVector::UpVector, blockingObstacle.ImpactNormal.GetSafeNormal());
-	}
-	else
-	{
-		contactDirection = -FVector::CrossProduct(FVector::UpVector, blockingObstacle.ImpactNormal.GetSafeNormal());
-	}*/
 	contactDirection = choosen_side * FVector::CrossProduct(FVector::UpVector, blockingObstacle.ImpactNormal.GetSafeNormal());
 
-	//float const coeffEvitement = 1.0f / (1.0f + FMath::Max(blockingObstacle.Distance - pawn->GetSimpleCollisionRadius(), 0.0f));
 	float const coeffEvitement = FMath::Max(blockingObstacle.Distance - (pawn->GetSimpleCollisionRadius() + 50.0f), 0.0f) / (castDist - (pawn->GetSimpleCollisionRadius() + 50.0f));
 	FVector const displacementDirection = pawn->GetActorForwardVector() * coeffEvitement + contactDirection * (1 - coeffEvitement);
 
-	//FVector const contactDirection = pawn->GetActorRightVector();
 	MovePawn(displacementDirection.GetSafeNormal(), deltaTime);
 }

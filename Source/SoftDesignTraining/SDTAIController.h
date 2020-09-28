@@ -50,5 +50,6 @@ private:
 	};
 	//DEFAULT CURRENT STATE
 	Stage m_state = Stage::moveForwardState;
-	int choosen_side = 0;
+	// Choix du coté vers lequel on tourne : 0 - aucun coté choisi / 1 - Tourne vers la gauche / -1 - Tourne vers la droite
+	int choosen_side = 0; 
 };
