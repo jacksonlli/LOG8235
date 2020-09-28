@@ -6,6 +6,8 @@
 #include "CollisionShape.h"
 #include "PhysicsHelpers.h"
 #include "SoftDesignTrainingMainCharacter.h"
+#include <SoftDesignTraining\SDTUtils.h>
+#include <SoftDesignTraining\SDTCollectible.h>
 
 void ASDTAIController::Tick(float deltaTime)
 {
@@ -34,9 +36,9 @@ void ASDTAIController::Tick(float deltaTime)
 		}
 
 	}
-	else if (IsBallDetected())//logic for spotting power-up balls
+	else if (GetBallDirection() != FVector(0,0,0))//logic for spotting power-up balls
 	{
-		choosen_side = 0;	// côté duquel le pawn va tourner face à un obstacle
+		m_state = Stage::moveToBall;	// côté duquel le pawn va tourner face à un obstacle
 	}
 	else
 	{
@@ -93,6 +95,11 @@ void ASDTAIController::Tick(float deltaTime)
 		if (choosen_side == 0)
 			ChooseSide(deltaTime);
 		AvoidWall(deltaTime);	// Fonction d'évitement
+	}
+	break;
+	case Stage::moveToBall:
+	{
+		MovePawn(GetBallDirection().GetSafeNormal(), deltaTime);
 	}
 	break;
 	}
@@ -280,4 +287,52 @@ void ASDTAIController::AvoidWall(float deltaTime)//évitement de mur et des piège
 	FVector const displacementDirection = pawn->GetActorForwardVector() * coeffEvitement + contactDirection * (1 - coeffEvitement);
 
 	MovePawn(displacementDirection.GetSafeNormal(), deltaTime);
+}
+
+FVector ASDTAIController::GetBallDirection()
+{
+	APawn* pawn = GetPawn();
+	UWorld* world = GetWorld();
+	TArray<FHitResult> OutHits;
+	FHitResult outHit;
+
+
+	// start and end locations
+	FVector SweepStart = pawn->GetActorLocation();
+	FVector SweepEnd = pawn->GetActorLocation();
+	SweepEnd.Z += 0.001f;
+
+	FCollisionShape CollisionBox;
+	float angleForwardandX = std::abs(std::acos(FVector::DotProduct(pawn->GetActorForwardVector().GetSafeNormal(), FVector(1, 0, 0).GetSafeNormal())));
+	float angleForwardandY = std::abs(std::acos(FVector::DotProduct(pawn->GetActorForwardVector().GetSafeNormal(), FVector(0, 1, 0).GetSafeNormal())));
+	CollisionBox = FCollisionShape::MakeBox(FVector(1000, 1000, 300));
+
+	bool isHit = GetWorld()->SweepMultiByObjectType(OutHits, SweepStart, SweepEnd, FQuat::Identity, COLLISION_COLLECTIBLE, CollisionBox);
+
+	if (isHit)
+	{
+		for (auto& Hit : OutHits)
+		{
+			if (GEngine)
+			{
+				FVector const toTarget = Hit.Actor->GetActorLocation() - pawn->GetActorLocation();
+				bool canSee = !world->LineTraceSingleByObjectType(outHit, pawn->GetActorLocation(), Hit.Actor->GetActorLocation(), ECC_WorldStatic) &&
+					(std::acos(FVector::DotProduct(pawn->GetActorForwardVector().GetSafeNormal(), toTarget.GetSafeNormal()))) < PI / 3.0f;
+				ASDTCollectible* collectible = dynamic_cast<ASDTCollectible*>(Hit.GetActor());
+
+				// screen log information on what was hit
+				if (canSee && !collectible->IsOnCooldown())
+				{
+
+					return toTarget;
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Hit Result: essai")));
+					//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Hit Result: %s"), *Hit.Actor->GetName()));
+				}
+				// uncommnet to see more info on sweeped actor
+				// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("All Hit Information: %s"), *Hit.ToString()));
+			}
+		}
+	}
+	return FVector(0, 0, 0);
+
 }
