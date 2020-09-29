@@ -52,27 +52,6 @@ void ASDTAIController::Tick(float deltaTime)
 	{
 	case Stage::moveForwardState:
 	{
-		/*
-		// Vecteurs unitaires haut/droite/bas/gauche du repère global
-		FVector2D WorldVectors[4];
-		WorldVectors[0] = FVector2D(0, 1);
-		WorldVectors[1] = FVector2D(1, 0);
-		WorldVectors[2] = FVector2D(0, -1);
-		WorldVectors[3] = FVector2D(-1, 0);
-
-		// Choix du vecteur global le plus proche du vecteur vitesse actuel
-		float dotScore = -100000.0f;
-		FVector2D bestWorldVector;
-
-		for (int32 i = 0; i < 4; i++)
-		{
-			if (FVector2D::DotProduct(FVector2D(GetPawn()->GetActorForwardVector().GetSafeNormal()), WorldVectors[i]) > dotScore)
-			{
-				dotScore = FVector2D::DotProduct(FVector2D(GetPawn()->GetActorForwardVector().GetSafeNormal()), WorldVectors[i]);
-				bestWorldVector = WorldVectors[i];
-			}
-		}*/
-
 		FVector2D bestWorldVector = NearestWorldVector(FVector2D(GetPawn()->GetActorForwardVector().GetSafeNormal()));
 		// Tourner le pawn pour qu'il s'aligne progressivement sur un vecteur global
 		MovePawn(GetPawn()->GetActorForwardVector().GetSafeNormal() * 0.85f + FVector(bestWorldVector * 0.15f, 0.0f), deltaTime);
@@ -98,7 +77,15 @@ void ASDTAIController::Tick(float deltaTime)
 		// Si aucun choix n'a déjà été fait, choisir un côté
 		if (chosen_side == 0)
 			ChooseSide(deltaTime);
-		AvoidWall(deltaTime);	// Fonction d'évitement
+		if (chosen_side == 2)
+		{
+			// Longer l'obstacle en suivant le World Vector le plus proche
+			FVector2D bestWorldVector = NearestWorldVector(FVector2D(GetPawn()->GetActorForwardVector().GetSafeNormal()));
+			// Tourner le pawn pour qu'il s'aligne progressivement sur un vecteur global
+			MovePawn(GetPawn()->GetActorForwardVector().GetSafeNormal() * 0.85f + FVector(bestWorldVector * 0.15f, 0.0f), deltaTime);
+		}
+		else
+			AvoidWall(deltaTime);	// Fonction d'évitement
 	}
 	break;
 	case Stage::moveToBall:
@@ -108,6 +95,9 @@ void ASDTAIController::Tick(float deltaTime)
 	break;
 	}
 }
+
+
+
 
 FVector2D ASDTAIController::NearestWorldVector(FVector2D vect) 
 {
@@ -133,6 +123,8 @@ FVector2D ASDTAIController::NearestWorldVector(FVector2D vect)
 	return bestWorldVector;
 }
 
+
+
 //Helper Functions
 
 bool ASDTAIController::IsWallOrTrapInTrajectory() // Renvoie True si un mur ou un piège est détecté devant le pawn à une distance de 200 ou moins
@@ -140,6 +132,7 @@ bool ASDTAIController::IsWallOrTrapInTrajectory() // Renvoie True si un mur ou u
 	UWorld* World = GetWorld();
 	APawn* pawn = GetPawn();
 	TArray<FHitResult> outHits;
+	
 
 	FCollisionObjectQueryParams objectQueryParams;
 	objectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);	// ajout des murs aux objets détectés
@@ -150,11 +143,27 @@ bool ASDTAIController::IsWallOrTrapInTrajectory() // Renvoie True si un mur ou u
 	FCollisionShape collisionShape;
 	collisionShape.SetCapsule(pawn->GetSimpleCollisionRadius(), pawn->GetSimpleCollisionHalfHeight());	// Capsule de collision du pawn
 
+	bool thereIsObstacle = World->SweepMultiByObjectType(outHits, pawn->GetActorLocation(), pawn->GetActorLocation() + pawn->GetActorForwardVector() * 200.0f, FQuat::Identity, objectQueryParams, collisionShape, queryParams);
+	
+	// Si l'obstacle est sur le côté (chosen_side = 2), le pawn va l'éviter en le logeant (i.e. en avançant selon le World Vector le plus proche)
+	if (thereIsObstacle)
+	{
+		if (abs(FVector2D::DotProduct(FVector2D(pawn->GetActorForwardVector()), FVector2D(outHits.Last().ImpactNormal))) < cos(PI / 4))
+		{
+			// Pour éviter de rester coincé, on vérifie qu'aucun obstacle ne gêne^pour longer l'obstacle
+			if (!World->SweepMultiByObjectType(outHits, pawn->GetActorLocation(), pawn->GetActorLocation() + FVector(NearestWorldVector(FVector2D(pawn->GetActorForwardVector())), 0.0f) * 200.0f, FQuat::Identity, objectQueryParams, collisionShape, queryParams))
+			chosen_side = 2;
+		}
+	}
+
 	// Debug
 	//DrawDebugCapsule(World, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 300.0f, pawn->GetSimpleCollisionHalfHeight(), pawn->GetSimpleCollisionRadius(), FQuat::Identity, FColor::Green, false, -1.0f, 0, 5.0f);
 
-	return World->SweepMultiByObjectType(outHits, pawn->GetActorLocation(), pawn->GetActorLocation() + pawn->GetActorForwardVector() * 200.0f, FQuat::Identity, objectQueryParams, collisionShape, queryParams);
+	return thereIsObstacle;
 }
+
+
+
 
 bool ASDTAIController::IsPlayerDetected()//détecter si l'agent voit le joueur
 {
@@ -193,11 +202,15 @@ bool ASDTAIController::IsPlayerDetected()//détecter si l'agent voit le joueur
 	}
 }
 
+
+
+
 bool ASDTAIController::IsPlayerPoweredUp()//voir si le joueur est powered up ou non, retourne true si oui.
 {
 	ASoftDesignTrainingMainCharacter* player = dynamic_cast<ASoftDesignTrainingMainCharacter*>(GetWorld()->GetFirstPlayerController()->GetPawn());
 	return player->IsPoweredUp();
 }
+
 
 
 
@@ -221,6 +234,7 @@ bool ASDTAIController::IsAgentHeadingTowardsPlayer(float deltaTime)//voir si l'a
 
 
 
+
 void ASDTAIController::MovePawn(FVector direction, float deltaTime)//bouge l'agent vers la direction choisie avec une acceleration constante jusqu'à une vitesse max
 {
 	//voir definitions de m_currentSpeed, m_maxSpeed et m_acceleration dans SDTAIController.h
@@ -228,6 +242,7 @@ void ASDTAIController::MovePawn(FVector direction, float deltaTime)//bouge l'age
 	GetPawn()->AddMovementInput(direction.GetSafeNormal(), FMath::Min(m_currentSpeed, m_maxSpeed)/100.f);//le 2e parametre de addMovementInput est une constante entre -1 et 1 utilisé pour scale la vitesse CharacterMouvementComponent
 	GetPawn()->SetActorRotation(direction.ToOrientationQuat());
 }
+
 
 
 
@@ -253,9 +268,6 @@ void ASDTAIController::ChooseSide(float deltaTime)//détermine quel côté l'agent 
 	FVector2D bestGlobalRight = NearestWorldVector(FVector2D(GetPawn()->GetActorRightVector().GetSafeNormal()));
 	World->LineTraceMultiByObjectType(outHitsRight, pawn->GetActorLocation() + FVector(bestGlobalForward, 0.f) * 120.0f, pawn->GetActorLocation() + FVector(bestGlobalForward, 0.f) * 120.0f + FVector(bestGlobalRight, 0.f) * castDist, objectQueryParams, queryParams);
 	World->LineTraceMultiByObjectType(outHitsLeft, pawn->GetActorLocation() + FVector(bestGlobalForward, 0.f) * 120.0f, pawn->GetActorLocation() + FVector(bestGlobalForward, 0.f) * 120.0f - FVector(bestGlobalRight, 0.f) * castDist, objectQueryParams, queryParams);
-
-	//World->LineTraceMultiByObjectType(outHitsRight, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f + pawn->GetActorRightVector() * castDist, objectQueryParams, queryParams);
-	//World->LineTraceMultiByObjectType(outHitsLeft, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f - pawn->GetActorRightVector() * castDist, objectQueryParams, queryParams);
 
 	// Debug
 	/*
@@ -302,6 +314,7 @@ void ASDTAIController::ChooseSide(float deltaTime)//détermine quel côté l'agent 
 
 
 
+
 void ASDTAIController::AvoidWall(float deltaTime)//évitement de mur et des pièges
 {
 	UWorld* World = GetWorld();
@@ -336,6 +349,7 @@ void ASDTAIController::AvoidWall(float deltaTime)//évitement de mur et des piège
 
 	MovePawn(displacementDirection.GetSafeNormal(), deltaTime);
 }
+
 
 
 
