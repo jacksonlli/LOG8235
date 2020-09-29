@@ -52,6 +52,7 @@ void ASDTAIController::Tick(float deltaTime)
 	{
 	case Stage::moveForwardState:
 	{
+		/*
 		// Vecteurs unitaires haut/droite/bas/gauche du repère global
 		FVector2D WorldVectors[4];
 		WorldVectors[0] = FVector2D(0, 1);
@@ -70,7 +71,9 @@ void ASDTAIController::Tick(float deltaTime)
 				dotScore = FVector2D::DotProduct(FVector2D(GetPawn()->GetActorForwardVector().GetSafeNormal()), WorldVectors[i]);
 				bestWorldVector = WorldVectors[i];
 			}
-		}
+		}*/
+
+		FVector2D bestWorldVector = NearestWorldVector(FVector2D(GetPawn()->GetActorForwardVector().GetSafeNormal()));
 		// Tourner le pawn pour qu'il s'aligne progressivement sur un vecteur global
 		MovePawn(GetPawn()->GetActorForwardVector().GetSafeNormal() * 0.85f + FVector(bestWorldVector * 0.15f, 0.0f), deltaTime);
 	}
@@ -100,10 +103,34 @@ void ASDTAIController::Tick(float deltaTime)
 	break;
 	case Stage::moveToBall:
 	{
-		MovePawn(GetBallDirection().GetSafeNormal() * 0.7f + GetPawn()->GetActorForwardVector().GetSafeNormal() * 0.3f, deltaTime);
+		MovePawn(GetBallDirection().GetSafeNormal() * 0.1f + GetPawn()->GetActorForwardVector().GetSafeNormal() * 0.9f, deltaTime);
 	}
 	break;
 	}
+}
+
+FVector2D ASDTAIController::NearestWorldVector(FVector2D vect) 
+{
+	FVector2D WorldVectors[4];
+	WorldVectors[0] = FVector2D(0, 1);
+	WorldVectors[1] = FVector2D(1, 0);
+	WorldVectors[2] = FVector2D(0, -1);
+	WorldVectors[3] = FVector2D(-1, 0);
+
+	// Choix du vecteur global le plus proche du vecteur vitesse actuel
+	float dotScore = -100000.0f;
+	FVector2D bestWorldVector;
+
+	for (int32 i = 0; i < 4; i++)
+	{
+		if (FVector2D::DotProduct(vect, WorldVectors[i]) > dotScore)
+		{
+			dotScore = FVector2D::DotProduct(vect, WorldVectors[i]);
+			bestWorldVector = WorldVectors[i];
+		}
+	}
+
+	return bestWorldVector;
 }
 
 //Helper Functions
@@ -214,6 +241,7 @@ void ASDTAIController::ChooseSide(float deltaTime)//détermine quel côté l'agent 
 	FCollisionObjectQueryParams objectQueryParams;
 	objectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);	// ajout des murs aux objets détectés
 	objectQueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel3);	// ajout des pièges
+	objectQueryParams.RemoveObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel4);   // retrait des autres joueurs
 	objectQueryParams.RemoveObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel5);	// retrait des Collectibles
 	FCollisionQueryParams queryParams = FCollisionQueryParams::DefaultQueryParam;
 	FCollisionShape collisionShape;
@@ -221,14 +249,20 @@ void ASDTAIController::ChooseSide(float deltaTime)//détermine quel côté l'agent 
 	float const castDist = 300.0f;
 
 	// On regarde des deux côtés du pawn pour savoir de quel côté tourner
-	World->LineTraceMultiByObjectType(outHitsRight, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f + pawn->GetActorRightVector() * castDist, objectQueryParams, queryParams);
-	World->LineTraceMultiByObjectType(outHitsLeft, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f - pawn->GetActorRightVector() * castDist, objectQueryParams, queryParams);
+	FVector2D bestGlobalForward = NearestWorldVector(FVector2D(GetPawn()->GetActorForwardVector().GetSafeNormal()));
+	FVector2D bestGlobalRight = NearestWorldVector(FVector2D(GetPawn()->GetActorRightVector().GetSafeNormal()));
+	World->LineTraceMultiByObjectType(outHitsRight, pawn->GetActorLocation() + FVector(bestGlobalForward, 0.f) * 120.0f, pawn->GetActorLocation() + FVector(bestGlobalForward, 0.f) * 120.0f + FVector(bestGlobalRight, 0.f) * castDist, objectQueryParams, queryParams);
+	World->LineTraceMultiByObjectType(outHitsLeft, pawn->GetActorLocation() + FVector(bestGlobalForward, 0.f) * 120.0f, pawn->GetActorLocation() + FVector(bestGlobalForward, 0.f) * 120.0f - FVector(bestGlobalRight, 0.f) * castDist, objectQueryParams, queryParams);
+
+	//World->LineTraceMultiByObjectType(outHitsRight, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f + pawn->GetActorRightVector() * castDist, objectQueryParams, queryParams);
+	//World->LineTraceMultiByObjectType(outHitsLeft, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f - pawn->GetActorRightVector() * castDist, objectQueryParams, queryParams);
 
 	// Debug
 	/*
-	DrawDebugLine(World, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f + pawn->GetActorRightVector() * castDist, FColor::Orange, false, 0.9f, 0, 9.0f);
-	DrawDebugLine(World, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f - pawn->GetActorRightVector() * castDist, FColor::Orange, false, 0.9f, 0, 9.0f);
+	DrawDebugLine(World, pawn->GetActorLocation() + FVector(bestGlobalForward, 0.f) * 120.0f, pawn->GetActorLocation() + FVector(bestGlobalForward, 0.f) * 120.0f + FVector(bestGlobalRight, 0.f) * castDist, FColor::Orange, false, 0.9f, 0, 9.0f);
+	DrawDebugLine(World, pawn->GetActorLocation() + FVector(bestGlobalForward, 0.f) * 120.0f, pawn->GetActorLocation() + FVector(bestGlobalForward, 0.f) * 120.0f - FVector(bestGlobalRight, 0.f) * castDist, FColor::Orange, false, 0.9f, 0, 9.0f);
 	
+
 	for (int32 i = 0; i < outHitsLeft.Num(); ++i)
 		DrawDebugPoint(World, outHitsLeft[i].ImpactPoint, 7.0f, FColor::Yellow, false, 1.0f, 0);
 	for (int32 i = 0; i < outHitsRight.Num(); ++i)
@@ -323,7 +357,7 @@ FVector ASDTAIController::GetBallDirection()
 
 	// Récupération de tous les éléments se trouvant à l'intérieur de la collision box dans la variable OutHits
 	FVector SweepStart = pawn->GetActorLocation();
-	FVector SweepEnd = pawn->GetActorLocation() + pawn->GetActorForwardVector()*1000.0f;
+	FVector SweepEnd = pawn->GetActorLocation() + pawn->GetActorForwardVector()*300.0f;
 	SweepEnd.Z += 0.001f;
 
 	//Debug

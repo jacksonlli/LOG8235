@@ -19,6 +19,7 @@ public:
 	bool IsWallOrTrapInTrajectory();
 	bool IsPlayerDetected();
 	bool IsPlayerPoweredUp();
+	FVector2D NearestWorldVector(FVector2D vect);
 	bool IsAgentHeadingTowardsPlayer(float deltaTime);
 	void MovePawn(FVector direction, float deltaTime);
 	virtual void AvoidWall(float deltaTime);
