@@ -319,9 +319,7 @@ FVector ASDTAIController::GetBallDirection()
 
 	// Création d'une collision box qui permettra de détecter les balles autour de l'agent
 	FCollisionShape CollisionBox;
-	float angleForwardandX = std::abs(std::acos(FVector::DotProduct(pawn->GetActorForwardVector().GetSafeNormal(), FVector(1, 0, 0).GetSafeNormal())));
-	float angleForwardandY = std::abs(std::acos(FVector::DotProduct(pawn->GetActorForwardVector().GetSafeNormal(), FVector(0, 1, 0).GetSafeNormal())));
-	CollisionBox = FCollisionShape::MakeBox(FVector(500, 500, 50));
+	CollisionBox = FCollisionShape::MakeBox(FVector(600, 600, 50));
 
 	// Récupération de tous les éléments se trouvant à l'intérieur de la collision box dans la variable OutHits
 	FVector SweepStart = pawn->GetActorLocation();
