@@ -17,7 +17,7 @@ void ASDTAIController::Tick(float deltaTime)
 	}
 	else if (IsPlayerDetected())//logic for spotting player
 	{
-		choosen_side = 0;
+		chosen_side = 0;
 		if (IsPlayerPoweredUp())//logic for checking player status
 		{
 			if (IsAgentHeadingTowardsPlayer(deltaTime))//logic to check if agent is walking towards the player
@@ -37,12 +37,12 @@ void ASDTAIController::Tick(float deltaTime)
 	}
 	else if (GetBallDirection() != FVector(0,0,0))//logic for spotting power-up balls
 	{
-		choosen_side = 0;
+		chosen_side = 0;
 		m_state = Stage::moveToBall;	// Diriger l'agent vers la direction du pickup.
 	}
 	else
 	{
-		choosen_side = 0;
+		chosen_side = 0;
 		m_state = Stage::moveForwardState;
 	}
 
@@ -93,7 +93,7 @@ void ASDTAIController::Tick(float deltaTime)
 	case Stage::avoidObstacleState:
 	{
 		// Si aucun choix n'a déjà été fait, choisir un côté
-		if (choosen_side == 0)
+		if (chosen_side == 0)
 			ChooseSide(deltaTime);
 		AvoidWall(deltaTime);	// Fonction d'évitement
 	}
@@ -250,17 +250,17 @@ void ASDTAIController::ChooseSide(float deltaTime)//détermine quel côté l'agent 
 	
 	if (isObstacleLeft && isObstacleRight)
 		// On tourne à droite
-		choosen_side = -1;
+		chosen_side = -1;
 	else if (isObstacleLeft && !isObstacleRight)
 		// On tourne à droite
-		choosen_side = -1;
+		chosen_side = -1;
 	else if (!isObstacleLeft && isObstacleRight)
 		// On tourne à gauche
-		choosen_side = 1;
+		chosen_side = 1;
 	else
 	{
 		// On choisit un côté au hasard
-		choosen_side = (rand() % 2) * 2 - 1;
+		chosen_side = (rand() % 2) * 2 - 1;
 		
 	}
 
@@ -295,7 +295,7 @@ void ASDTAIController::AvoidWall(float deltaTime)//évitement de mur et des piège
 	// Calcul du nouveau vecteur de direction (faire un coefficient inv proportionnel a la distance au pawn)
 	FHitResult blockingObstacle = outHits[0];
 	FVector contactDirection;
-	contactDirection = choosen_side * FVector::CrossProduct(FVector::UpVector, blockingObstacle.ImpactNormal.GetSafeNormal());
+	contactDirection = chosen_side * FVector::CrossProduct(FVector::UpVector, blockingObstacle.ImpactNormal.GetSafeNormal());
 
 	float const coeffEvitement = FMath::Max(blockingObstacle.Distance - (pawn->GetSimpleCollisionRadius() + 50.0f), 0.0f) / (castDist - (pawn->GetSimpleCollisionRadius() + 50.0f));
 	FVector const displacementDirection = pawn->GetActorForwardVector() * coeffEvitement + contactDirection * (1 - coeffEvitement);
