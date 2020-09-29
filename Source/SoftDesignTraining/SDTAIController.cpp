@@ -6,6 +6,8 @@
 #include "CollisionShape.h"
 #include "PhysicsHelpers.h"
 #include "SoftDesignTrainingMainCharacter.h"
+#include <SoftDesignTraining\SDTUtils.h>
+#include <SoftDesignTraining\SDTCollectible.h>
 
 void ASDTAIController::Tick(float deltaTime)
 {
@@ -34,9 +36,9 @@ void ASDTAIController::Tick(float deltaTime)
 		}
 
 	}
-	else if (IsBallDetected())//logic for spotting power-up balls
+	else if (GetBallDirection() != FVector(0,0,0))//logic for spotting power-up balls
 	{
-		choosen_side = 0;	// côté duquel le pawn va tourner face à un obstacle
+		m_state = Stage::moveToBall;	// Diriger l'agent vers la direction du pickup.
 	}
 	else
 	{
@@ -45,7 +47,7 @@ void ASDTAIController::Tick(float deltaTime)
 	}
 
 
-	//apply state
+	//Actions à appliquer pour les différents states définis
 	switch (m_state)
 	{
 	case Stage::moveForwardState:
@@ -94,6 +96,11 @@ void ASDTAIController::Tick(float deltaTime)
 		if (choosen_side == 0)
 			ChooseSide(deltaTime);
 		AvoidWall(deltaTime);	// Fonction d'évitement
+	}
+	break;
+	case Stage::moveToBall:
+	{
+		MovePawn(GetBallDirection().GetSafeNormal(), deltaTime);
 	}
 	break;
 	}
@@ -286,4 +293,53 @@ void ASDTAIController::AvoidWall(float deltaTime)//évitement de mur et des piège
 	FVector const displacementDirection = pawn->GetActorForwardVector() * coeffEvitement + contactDirection * (1 - coeffEvitement);
 
 	MovePawn(displacementDirection.GetSafeNormal(), deltaTime);
+}
+
+FVector ASDTAIController::GetBallDirection()
+{
+	/*
+		Fonction renvoyant la direction dans laquelle la balle la plus proche et visible par l'agent se situe.
+		La fonction détecte les balles autour de l'AI, et renvoie le vecteur qui va le diriger vers la balle visible la plus proche
+	*/
+
+	APawn* pawn = GetPawn();
+	UWorld* world = GetWorld();
+	TArray<FHitResult> OutHits;
+	FHitResult outHit;
+
+	// Création d'une collision box qui permettra de détecter les balles autour de l'agent
+	FCollisionShape CollisionBox;
+	float angleForwardandX = std::abs(std::acos(FVector::DotProduct(pawn->GetActorForwardVector().GetSafeNormal(), FVector(1, 0, 0).GetSafeNormal())));
+	float angleForwardandY = std::abs(std::acos(FVector::DotProduct(pawn->GetActorForwardVector().GetSafeNormal(), FVector(0, 1, 0).GetSafeNormal())));
+	CollisionBox = FCollisionShape::MakeBox(FVector(1000, 1000, 300));
+
+	// Récupération de tous les éléments se trouvant à l'intérieur de la collision box dans la variable OutHits
+	FVector SweepStart = pawn->GetActorLocation();
+	FVector SweepEnd = pawn->GetActorLocation();
+	SweepEnd.Z += 0.001f;
+
+	bool isHit = GetWorld()->SweepMultiByObjectType(OutHits, SweepStart, SweepEnd, FQuat::Identity, COLLISION_COLLECTIBLE, CollisionBox);
+
+	if (isHit)
+	{
+		for (auto& Hit : OutHits)
+		{
+			if (GEngine)
+			{
+				FVector const toTarget = Hit.Actor->GetActorLocation() - pawn->GetActorLocation();
+				// vérification de la visibilité de la balle
+				// Pour cela, un mur ne doit pas séparer l'agent de la balle et la balle ne doit pas être dans un état de cooldown
+				bool canSee = !world->LineTraceSingleByObjectType(outHit, pawn->GetActorLocation(), Hit.Actor->GetActorLocation(), ECC_WorldStatic) &&
+					(std::acos(FVector::DotProduct(pawn->GetActorForwardVector().GetSafeNormal(), toTarget.GetSafeNormal()))) < PI / 3.0f;
+				ASDTCollectible* collectible = dynamic_cast<ASDTCollectible*>(Hit.GetActor());
+
+				if (canSee && !collectible->IsOnCooldown())
+				{
+					return toTarget;
+				}
+
+			}
+		}
+	}
+	return FVector(0, 0, 0); // Valeur retournée dans le cas où aucune balle n'est détectée
 }

@@ -23,6 +23,7 @@ public:
 	bool IsBallDetected();
 	void MovePawn(FVector direction, float deltaTime);
 	virtual void AvoidWall(float deltaTime);
+	FVector GetBallDirection();
 	void ChooseSide(float deltaTime);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
@@ -46,7 +47,8 @@ private:
 		moveForwardState,
 		chaseState,
 		fleeState,
-		avoidObstacleState
+		avoidObstacleState,
+		moveToBall
 	};
 	//DEFAULT CURRENT STATE
 	Stage m_state = Stage::moveForwardState;
