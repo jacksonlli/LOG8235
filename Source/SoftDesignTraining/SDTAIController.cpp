@@ -144,7 +144,7 @@ bool ASDTAIController::IsPlayerDetected()//détecter si l'agent voit le joueur
 		bool wallBetweenPlayerAndAgent = GetWorld()->LineTraceSingleByObjectType(outHit, GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation(), ECC_WorldStatic);//voir si il y a un mur entre le joueur et l'agent
 
 		//debug
-		/*if (isPlayerInRange)
+		if (isPlayerInRange)
 		{
 			DrawDebugCircle(GetWorld(), GetPawn()->GetActorLocation(), m_visionRadius, 50, FColor::Green, false, -1.f, 0, 5.f, FVector(1, 0, 0), FVector(0, 1, 0), false);
 			if (wallBetweenPlayerAndAgent)
@@ -160,7 +160,7 @@ bool ASDTAIController::IsPlayerDetected()//détecter si l'agent voit le joueur
 		{
 			DrawDebugCircle(GetWorld(), GetPawn()->GetActorLocation(), m_visionRadius, 50, FColor::Red, false, -1.f, 0, 5.f, FVector(1, 0, 0), FVector(0, 1, 0), false);
 		}
-		*/
+		
 
 		return !wallBetweenPlayerAndAgent && isPlayerInRange;
 	}
