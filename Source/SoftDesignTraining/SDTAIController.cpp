@@ -38,6 +38,7 @@ void ASDTAIController::Tick(float deltaTime)
 	}
 	else if (GetBallDirection() != FVector(0,0,0))//logic for spotting power-up balls
 	{
+		choosen_side = 0;
 		m_state = Stage::moveToBall;	// Diriger l'agent vers la direction du pickup.
 	}
 	else
@@ -173,7 +174,7 @@ bool ASDTAIController::IsPlayerPoweredUp()//voir si le joueur est powered up ou 
 }
 bool ASDTAIController::IsAgentHeadingTowardsPlayer(float deltaTime)//voir si l'agent se dirige vers le joueur avec un cône de vision. 
 {
-	float theta = 120.f / 180.f*PI;//angle à chaque côté de la direction forward qui, lors de la détection d'un joueur powered-up dans la zone, tourne l'agent pour fuire
+	float theta = 45.f / 180.f*PI;//angle à chaque côté de la direction forward qui, lors de la détection d'un joueur powered-up dans la zone, tourne l'agent pour fuire
 	//debug
 	//DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) + GetPawn()->GetActorRightVector()*sin(theta))*m_visionRadius, FColor::Orange, false, -1.f, 0, 10.f);
 	//DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) - GetPawn()->GetActorRightVector()*sin(theta))*m_visionRadius, FColor::Orange, false, -1.f, 0, 10.f);
