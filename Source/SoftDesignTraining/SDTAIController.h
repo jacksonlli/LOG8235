@@ -19,7 +19,7 @@ public:
 	bool IsWallOrTrapInTrajectory();
 	bool IsPlayerDetected();
 	bool IsPlayerPoweredUp();
-	bool IsAgentHeadingTowardsPlayer();
+	bool IsAgentHeadingTowardsPlayer(float deltaTime);
 	bool IsBallDetected();
 	void MovePawn(FVector direction, float deltaTime);
 	virtual void AvoidWall(float deltaTime);

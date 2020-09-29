@@ -19,7 +19,7 @@ void ASDTAIController::Tick(float deltaTime)
 		choosen_side = 0;
 		if (IsPlayerPoweredUp())//logic for checking player status
 		{
-			if (IsAgentHeadingTowardsPlayer())//logic to check if agent is walking towards the player
+			if (IsAgentHeadingTowardsPlayer(deltaTime))//logic to check if agent is walking towards the player
 			{
 				m_state = Stage::fleeState;//si l'agent se dirige vers le joeur en power-up, on le tourne
 			}
@@ -75,16 +75,17 @@ void ASDTAIController::Tick(float deltaTime)
 	break;
 	case Stage::chaseState:
 	{
-		// Déplacement orienté vers le joueur
+		// Déplacement orienté vers le joueur progressivement
 		FVector2D toPlayer = FVector2D(GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation() - GetPawn()->GetActorLocation());
-		MovePawn(FVector(toPlayer, 0.f), deltaTime);
+		MovePawn(GetPawn()->GetActorForwardVector().GetSafeNormal() * 0.9f + FVector(toPlayer, 0.f).GetSafeNormal()*0.1f, deltaTime);
 	}
 	break;
 	case Stage::fleeState:
 	{
-		// Déplacement orienté dans la direction opposée au joueur
+		// Déplacement orienté dans la direction opposée au joueur progressivement
 		FVector2D toPlayer = FVector2D(GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation() - GetPawn()->GetActorLocation());
-		MovePawn(-FVector(toPlayer, 0.f), deltaTime);
+
+		MovePawn(GetPawn()->GetActorForwardVector().GetSafeNormal() * 0.6f  - FVector(toPlayer, 0.f).GetSafeNormal()*0.4f, deltaTime);
 	}
 	break;
 	case Stage::avoidObstacleState:
@@ -163,17 +164,22 @@ bool ASDTAIController::IsPlayerPoweredUp()//voir si le joueur est powered up ou 
 	ASoftDesignTrainingMainCharacter* player = dynamic_cast<ASoftDesignTrainingMainCharacter*>(GetWorld()->GetFirstPlayerController()->GetPawn());
 	return player->IsPoweredUp();
 }
-bool ASDTAIController::IsAgentHeadingTowardsPlayer()//voir si l'agent se dirige vers le joueur avec un cône de vision. 
+bool ASDTAIController::IsAgentHeadingTowardsPlayer(float deltaTime)//voir si l'agent se dirige vers le joueur avec un cône de vision. 
 {
-	float theta = 30.f / 180.f*PI;//angle à chaque côté de la direction forward qui, lors de la détection d'un joueur powered-up dans la zone, tourne l'agent pour fuire
+	float theta = 120.f / 180.f*PI;//angle à chaque côté de la direction forward qui, lors de la détection d'un joueur powered-up dans la zone, tourne l'agent pour fuire
 	//debug
 	//DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) + GetPawn()->GetActorRightVector()*sin(theta))*m_visionRadius, FColor::Orange, false, -1.f, 0, 10.f);
 	//DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector()*cos(theta) - GetPawn()->GetActorRightVector()*sin(theta))*m_visionRadius, FColor::Orange, false, -1.f, 0, 10.f);
 
-	//logique
 	FVector2D currentDirection = FVector2D(GetPawn()->GetActorForwardVector());
-	FVector2D toPlayer = FVector2D(GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation() - GetPawn()->GetActorLocation()).GetSafeNormal();//cône de vision
-	return FVector2D::DotProduct(currentDirection, toPlayer) > cos(theta);
+	FVector agentPosition = GetPawn()->GetActorLocation();
+
+	APawn* player = GetWorld()->GetFirstPlayerController()->GetPawn();
+	FVector playerLocation = player->GetActorLocation();
+
+	FVector2D toPlayer = FVector2D( playerLocation - agentPosition ).GetSafeNormal();//vecteur de l'agent à la position présente du joueur
+
+	return FVector2D::DotProduct(currentDirection, toPlayer) > cos(theta);//l'agent se dirige vers le joueur si le joueur est dans le cone de vision
 }
 bool ASDTAIController::IsBallDetected()
 {
