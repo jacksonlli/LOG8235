@@ -15,10 +15,13 @@ public:
     virtual void BeginPlay() override;
     virtual void OnCollectPowerUp() {};
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-	int nb_pickup = 0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-	int nb_death = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = AI)
+		//Nombre de pickups ramassés par agent
+		int nb_pickup = 0;
+	UPROPERTY(BlueprintReadOnly, Category = AI)
+		//Nombre de morts (par piège) par agent
+		int nb_death = 0;
 
 protected:
     UFUNCTION()

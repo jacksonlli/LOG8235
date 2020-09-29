@@ -4,7 +4,6 @@
 #include "SoftDesignTraining.h"
 #include "DrawDebugHelpers.h"
 #include "CollisionShape.h"
-#include "PhysicsHelpers.h"
 #include "SoftDesignTrainingMainCharacter.h"
 #include <SoftDesignTraining\SDTUtils.h>
 #include <SoftDesignTraining\SDTCollectible.h>
@@ -73,7 +72,7 @@ void ASDTAIController::Tick(float deltaTime)
 			}
 		}
 		// Tourner le pawn pour qu'il s'aligne progressivement sur un vecteur global
-		MovePawn(GetPawn()->GetActorForwardVector().GetSafeNormal() * 0.9f + FVector(bestWorldVector * 0.1f, 0.0f), deltaTime);
+		MovePawn(GetPawn()->GetActorForwardVector().GetSafeNormal() * 0.85f + FVector(bestWorldVector * 0.15f, 0.0f), deltaTime);
 	}
 	break;
 	case Stage::chaseState:
@@ -101,7 +100,7 @@ void ASDTAIController::Tick(float deltaTime)
 	break;
 	case Stage::moveToBall:
 	{
-		MovePawn(GetBallDirection().GetSafeNormal(), deltaTime);
+		MovePawn(GetBallDirection().GetSafeNormal() * 0.7f + GetPawn()->GetActorForwardVector().GetSafeNormal() * 0.3f, deltaTime);
 	}
 	break;
 	}
@@ -144,6 +143,7 @@ bool ASDTAIController::IsPlayerDetected()//détecter si l'agent voit le joueur
 		bool wallBetweenPlayerAndAgent = GetWorld()->LineTraceSingleByObjectType(outHit, GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation(), ECC_WorldStatic);//voir si il y a un mur entre le joueur et l'agent
 
 		//debug
+		/*
 		if (isPlayerInRange)
 		{
 			DrawDebugCircle(GetWorld(), GetPawn()->GetActorLocation(), m_visionRadius, 50, FColor::Green, false, -1.f, 0, 5.f, FVector(1, 0, 0), FVector(0, 1, 0), false);
@@ -160,7 +160,7 @@ bool ASDTAIController::IsPlayerDetected()//détecter si l'agent voit le joueur
 		{
 			DrawDebugCircle(GetWorld(), GetPawn()->GetActorLocation(), m_visionRadius, 50, FColor::Red, false, -1.f, 0, 5.f, FVector(1, 0, 0), FVector(0, 1, 0), false);
 		}
-		
+		*/
 
 		return !wallBetweenPlayerAndAgent && isPlayerInRange;
 	}
@@ -168,10 +168,12 @@ bool ASDTAIController::IsPlayerDetected()//détecter si l'agent voit le joueur
 
 bool ASDTAIController::IsPlayerPoweredUp()//voir si le joueur est powered up ou non, retourne true si oui.
 {
-
 	ASoftDesignTrainingMainCharacter* player = dynamic_cast<ASoftDesignTrainingMainCharacter*>(GetWorld()->GetFirstPlayerController()->GetPawn());
 	return player->IsPoweredUp();
 }
+
+
+
 bool ASDTAIController::IsAgentHeadingTowardsPlayer(float deltaTime)//voir si l'agent se dirige vers le joueur avec un cône de vision. 
 {
 	float theta = 45.f / 180.f*PI;//angle à chaque côté de la direction forward qui, lors de la détection d'un joueur powered-up dans la zone, tourne l'agent pour fuire
@@ -189,10 +191,8 @@ bool ASDTAIController::IsAgentHeadingTowardsPlayer(float deltaTime)//voir si l'a
 
 	return FVector2D::DotProduct(currentDirection, toPlayer) > cos(theta);//l'agent se dirige vers le joueur si le joueur est dans le cone de vision
 }
-bool ASDTAIController::IsBallDetected()
-{
-	return false;
-}
+
+
 
 void ASDTAIController::MovePawn(FVector direction, float deltaTime)//bouge l'agent vers la direction choisie avec une acceleration constante jusqu'à une vitesse max
 {
@@ -201,6 +201,8 @@ void ASDTAIController::MovePawn(FVector direction, float deltaTime)//bouge l'age
 	GetPawn()->AddMovementInput(direction.GetSafeNormal(), FMath::Min(m_currentSpeed, m_maxSpeed)/100.f);//le 2e parametre de addMovementInput est une constante entre -1 et 1 utilisé pour scale la vitesse CharacterMouvementComponent
 	GetPawn()->SetActorRotation(direction.ToOrientationQuat());
 }
+
+
 
 void ASDTAIController::ChooseSide(float deltaTime)//détermine quel côté l'agent tourne en modifiant la variable chosenSide
 {
@@ -219,11 +221,14 @@ void ASDTAIController::ChooseSide(float deltaTime)//détermine quel côté l'agent 
 	float const castDist = 300.0f;
 
 	// On regarde des deux côtés du pawn pour savoir de quel côté tourner
-	World->LineTraceMultiByObjectType(outHitsRight, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 100.f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 100.f + pawn->GetActorRightVector() * castDist, objectQueryParams, queryParams);
-	World->LineTraceMultiByObjectType(outHitsLeft, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 100.f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 100.f - pawn->GetActorRightVector() * castDist, objectQueryParams, queryParams);
+	World->LineTraceMultiByObjectType(outHitsRight, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f + pawn->GetActorRightVector() * castDist, objectQueryParams, queryParams);
+	World->LineTraceMultiByObjectType(outHitsLeft, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f - pawn->GetActorRightVector() * castDist, objectQueryParams, queryParams);
 
 	// Debug
 	/*
+	DrawDebugLine(World, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f + pawn->GetActorRightVector() * castDist, FColor::Orange, false, 0.9f, 0, 9.0f);
+	DrawDebugLine(World, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f, pawn->GetActorLocation() + pawn->GetActorForwardVector() * 120.0f - pawn->GetActorRightVector() * castDist, FColor::Orange, false, 0.9f, 0, 9.0f);
+	
 	for (int32 i = 0; i < outHitsLeft.Num(); ++i)
 		DrawDebugPoint(World, outHitsLeft[i].ImpactPoint, 7.0f, FColor::Yellow, false, 1.0f, 0);
 	for (int32 i = 0; i < outHitsRight.Num(); ++i)
@@ -261,6 +266,8 @@ void ASDTAIController::ChooseSide(float deltaTime)//détermine quel côté l'agent 
 
 }
 
+
+
 void ASDTAIController::AvoidWall(float deltaTime)//évitement de mur et des pièges
 {
 	UWorld* World = GetWorld();
@@ -296,6 +303,8 @@ void ASDTAIController::AvoidWall(float deltaTime)//évitement de mur et des piège
 	MovePawn(displacementDirection.GetSafeNormal(), deltaTime);
 }
 
+
+
 FVector ASDTAIController::GetBallDirection()
 {
 	/*
@@ -312,12 +321,15 @@ FVector ASDTAIController::GetBallDirection()
 	FCollisionShape CollisionBox;
 	float angleForwardandX = std::abs(std::acos(FVector::DotProduct(pawn->GetActorForwardVector().GetSafeNormal(), FVector(1, 0, 0).GetSafeNormal())));
 	float angleForwardandY = std::abs(std::acos(FVector::DotProduct(pawn->GetActorForwardVector().GetSafeNormal(), FVector(0, 1, 0).GetSafeNormal())));
-	CollisionBox = FCollisionShape::MakeBox(FVector(1000, 1000, 300));
+	CollisionBox = FCollisionShape::MakeBox(FVector(500, 500, 50));
 
 	// Récupération de tous les éléments se trouvant à l'intérieur de la collision box dans la variable OutHits
 	FVector SweepStart = pawn->GetActorLocation();
-	FVector SweepEnd = pawn->GetActorLocation();
+	FVector SweepEnd = pawn->GetActorLocation() + pawn->GetActorForwardVector()*1000.0f;
 	SweepEnd.Z += 0.001f;
+
+	//Debug
+	//DrawDebugBox(world, SweepEnd, CollisionBox.GetExtent(), FColor::Green, false, 0.1f, 0, 5.0f);
 
 	bool isHit = GetWorld()->SweepMultiByObjectType(OutHits, SweepStart, SweepEnd, FQuat::Identity, COLLISION_COLLECTIBLE, CollisionBox);
 
@@ -327,14 +339,14 @@ FVector ASDTAIController::GetBallDirection()
 		{
 			if (GEngine)
 			{
-				FVector const toTarget = Hit.Actor->GetActorLocation() - pawn->GetActorLocation();
+				FVector const toTarget = FVector(FVector2D(Hit.Actor->GetActorLocation() - pawn->GetActorLocation()),0.0f);
 				// vérification de la visibilité de la balle
 				// Pour cela, un mur ne doit pas séparer l'agent de la balle et la balle ne doit pas être dans un état de cooldown
 				bool canSee = !world->LineTraceSingleByObjectType(outHit, pawn->GetActorLocation(), Hit.Actor->GetActorLocation(), ECC_WorldStatic) &&
 					(std::acos(FVector::DotProduct(pawn->GetActorForwardVector().GetSafeNormal(), toTarget.GetSafeNormal()))) < PI / 3.0f;
 				ASDTCollectible* collectible = dynamic_cast<ASDTCollectible*>(Hit.GetActor());
-
-				if (canSee && !collectible->IsOnCooldown())
+				
+				if (canSee && collectible->GetStaticMeshComponent()->IsVisible())
 				{
 					return toTarget;
 				}
