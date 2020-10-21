@@ -81,6 +81,10 @@ protected:
     TArray<FVector> PathToFollow;
     int32           CurrentDestinationIndex = 0;
 
+	// List of all pickups
+	// TArray<ASDTCollectible> listPickups = {}
+
+
     // List of all pickups coordinates
     TArray<FVector2D> listLocation = {  FVector2D(-210., 1670.),
                                         FVector2D(-210., 1330.),

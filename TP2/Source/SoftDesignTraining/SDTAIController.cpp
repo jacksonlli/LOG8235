@@ -22,6 +22,38 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
 
 void ASDTAIController::GoToBestTarget(float deltaTime)
 {
+
+	if (PathToFollow.Num() > 0)
+	{
+		FVector2D position2D(GetPawn()->GetActorLocation());
+		FVector destination(PathToFollow.Last());
+		FVector2D destination2D(destination);
+		//GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, FString::Printf(TEXT("Repath: %f, %f"), destination2D.X, destination2D.Y));
+		if (position2D.Equals(destination2D, 10.f))
+		{
+			ShouldRePath = true;
+		}
+		TArray<TEnumAsByte<EObjectTypeQuery>> detectionTraceObjectTypes;
+		detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_COLLECTIBLE));
+
+		TArray<FHitResult> detectedPickup;
+		bool isHits = GetWorld()->SweepMultiByObjectType(detectedPickup, FVector(destination2D, 245.f), FVector(destination2D, 255.f), FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
+
+		if (isHits)
+		{
+			for (FHitResult Hit : detectedPickup)
+			{
+				ASDTCollectible* collectible = dynamic_cast<ASDTCollectible*>(Hit.GetActor());
+				if (!collectible->GetStaticMeshComponent()->IsVisible())
+				{
+					ShouldRePath = true;
+					
+				}
+			}
+		}
+		
+	}
+	
     //Move to target depending on current behavior
     switch (m_state)
     {
@@ -156,7 +188,6 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
     APawn* selfPawn = GetPawn();
     if (!selfPawn)
         return;
-
     if (ShouldRePath)
     {
         // Choix du pickup le plus proche
@@ -164,13 +195,30 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
         UNavigationPath* chosenPath = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), selfPawn->GetActorLocation());
         for (const FVector2D& pickupLocation : listLocation)
         {
-            UNavigationPath* path = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), FVector(pickupLocation, selfPawn->GetActorLocation().Z));
-            float cost = (pickupLocation - FVector2D(selfPawn->GetActorLocation())).SizeSquared();
-            if (cost < mincost)
-            {
-                mincost = cost;
-                chosenPath = path;
-            }
+			TArray<TEnumAsByte<EObjectTypeQuery>> detectionTraceObjectTypes;
+			detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_COLLECTIBLE));
+
+			TArray<FHitResult> detectedPickup;
+			bool isHits = GetWorld()->SweepMultiByObjectType(detectedPickup, FVector(pickupLocation, 245.f), FVector(pickupLocation, 255.f), FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
+
+			if (isHits)
+			{
+				for (FHitResult Hit : detectedPickup)
+				{
+					ASDTCollectible* collectible = dynamic_cast<ASDTCollectible*>(Hit.GetActor());
+					if (collectible->GetStaticMeshComponent()->IsVisible())
+					{
+						UNavigationPath* path = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), FVector(pickupLocation, selfPawn->GetActorLocation().Z));
+						float cost = (pickupLocation - FVector2D(selfPawn->GetActorLocation())).SizeSquared();
+						if (cost < mincost)
+						{
+							mincost = cost;
+							chosenPath = path;
+						}
+					}
+				}
+				
+			}
         }
 
         if (chosenPath->IsValid())
@@ -178,6 +226,7 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
             PathToFollow.Empty();
             for (FNavPathPoint point : chosenPath->GetPath()->GetPathPoints())
                 PathToFollow.Add(point.Location);
+			CurrentDestinationIndex = 0;
         }
 
         ShouldRePath = false;
@@ -185,8 +234,6 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
     
         ShowNavigationPath();
         MoveTowardsDirection(deltaTime);
-        
-        //GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, FString::Printf(TEXT("Pickup location : %f, %f"), bestPickup.X, bestPickup.Y));
 }
 
 
