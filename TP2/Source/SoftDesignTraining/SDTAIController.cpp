@@ -12,6 +12,7 @@
 #include "SDTUtils.h"
 #include "EngineUtils.h"
 
+
 #define PATH_FOLLOW_DEBUG
 #define SHORTCUT_SAMPLE_NUM 4
 
@@ -58,16 +59,20 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     switch (m_state)
     {
     case ASDTAIController::AIState::Pursue:
-        break;
-    case ASDTAIController::AIState::GoToLastSeen:
-        break;
+		if (ShouldRePath)
+			SelectPath(UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()));
+		MoveTowardsDirection(deltaTime);
+		break;
     case ASDTAIController::AIState::Flee:
+		if (ShouldRePath)
+			SelectPath(GetPathToFleeLocation());
+		MoveTowardsDirection(deltaTime);
         break;
     case ASDTAIController::AIState::GoToClosestPickup:
         GoToClosestPickup(deltaTime);
         break;
     default:
-        break;
+		break;
     }
 }
 
@@ -123,36 +128,26 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     if (!playerCharacter)
         return;
 
-    FVector detectionStartLocation = selfPawn->GetActorLocation() + selfPawn->GetActorForwardVector() * m_DetectionCapsuleForwardStartingOffset;
-    FVector detectionEndLocation = detectionStartLocation + selfPawn->GetActorForwardVector() * m_DetectionCapsuleHalfLength * 2;
-
-    TArray<TEnumAsByte<EObjectTypeQuery>> detectionTraceObjectTypes;
-    detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_COLLECTIBLE));
-    detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_PLAYER));
-
-    TArray<FHitResult> allDetectionHits;
-    GetWorld()->SweepMultiByObjectType(allDetectionHits, detectionStartLocation, detectionEndLocation, FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
-
-    FHitResult detectionHit;
-    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
-
-
-    //Set behavior based on hit
-    if (allDetectionHits.Num() != 0)
-    {
-        // Si c'est le joueur, le poursuivre ou le fuir
-        UPrimitiveComponent* component = detectionHit.GetComponent();
-        if (component->GetCollisionObjectType() == COLLISION_PLAYER)
-        {
-            // A completer
-            m_state = AIState::Pursue;
-        }
-    }
-
-    // Sinon, aller vers le pickup le plus proche
-    m_state = AIState::GoToClosestPickup;
     
-    DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
+    if (IsPlayerDetected())// Si on detecte le joueur, choisir de le poursuivre ou le fuir
+    {
+		ShouldRePath = true; //make sure the agent repaths based off new player coordinates while player is detected
+		if (SDTUtils::IsPlayerPoweredUp(GetWorld()))
+		{
+			m_state = AIState::Flee;
+
+		}
+		else {
+			m_state = AIState::Pursue;
+		}
+            
+    }
+	else
+	{
+		// Sinon, aller vers le pickup le plus proche
+		m_state = AIState::GoToClosestPickup;
+	}
+    
 }
 
 // If the player is inside the detection capsule, returns the player in outDetectionHit.
@@ -221,21 +216,26 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
 			}
         }
 
-        if (chosenPath->IsValid())
-        {
-            PathToFollow.Empty();
-            for (FNavPathPoint point : chosenPath->GetPath()->GetPathPoints())
-                PathToFollow.Add(point.Location);
-			CurrentDestinationIndex = 0;
-        }
-
-        ShouldRePath = false;
+		SelectPath(chosenPath);
+        
     }
     
         ShowNavigationPath();
         MoveTowardsDirection(deltaTime);
 }
 
+void ASDTAIController::SelectPath(UNavigationPath* chosenPath)
+{
+	if (chosenPath->IsValid())
+	{
+		PathToFollow.Empty();
+		for (FNavPathPoint point : chosenPath->GetPath()->GetPathPoints())
+			PathToFollow.Add(point.Location);
+		CurrentDestinationIndex = 0;
+	}
+
+	ShouldRePath = false;
+}
 
 FVector ASDTAIController::ComputeDestination(float deltaTime)
 {
@@ -414,7 +414,7 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
             FVector position = GetPawn()->GetActorLocation();
             FVector destination = ComputeDestination(deltaTime);
 
-            GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, FString::Printf(TEXT("Direction : %f, %f, %f"), destination.X, destination.Y, destination.Z));
+            //GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, FString::Printf(TEXT("Direction : %f, %f, %f"), destination.X, destination.Y, destination.Z));
 
 #ifdef PATH_FOLLOW_DEBUG
             {
@@ -447,3 +447,52 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
         ApplyVelocity(deltaTime, velocity);
     }
 }
+
+bool ASDTAIController::IsPlayerDetected()
+{
+	APawn* selfPawn = GetPawn();
+	FVector detectionStartLocation = selfPawn->GetActorLocation() + selfPawn->GetActorForwardVector() * m_DetectionCapsuleForwardStartingOffset;
+	FVector detectionEndLocation = detectionStartLocation + selfPawn->GetActorForwardVector() * m_DetectionCapsuleHalfLength * 2;
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> detectionTraceObjectTypes;
+	detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_COLLECTIBLE));
+	detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_PLAYER));
+
+	TArray<FHitResult> allDetectionHits;
+	GetWorld()->SweepMultiByObjectType(allDetectionHits, detectionStartLocation, detectionEndLocation, FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
+
+	FHitResult detectionHit;
+	GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
+
+	bool playerInDetectionZone = allDetectionHits.Num() != 0 && detectionHit.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER;
+	FHitResult outHit;
+	bool wallInBetween = GetWorld()->LineTraceSingleByObjectType(outHit, GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation(), ECC_WorldStatic);
+
+	//DEBUG
+	 DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
+
+	return playerInDetectionZone && !wallInBetween;
+}
+
+UNavigationPath* ASDTAIController::GetPathToFleeLocation()
+{
+	TArray<AActor*> foundLocations;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASDTFleeLocation::StaticClass(), foundLocations);
+	FVector directionAwayFromPlayer = (GetPawn()->GetActorLocation() - GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()).GetSafeNormal();
+	float maxDirectionScore = -999999;
+	FVector bestFleeLocation;
+	for (AActor* fleeLocationObject : foundLocations)
+	{
+		FVector fleeLocationVector = fleeLocationObject->GetActorLocation();
+		FVector directionToFleeLocation = (fleeLocationVector - GetPawn()->GetActorLocation()).GetSafeNormal();
+		float directionScore = FVector::DotProduct(directionAwayFromPlayer, directionToFleeLocation);
+		if (directionScore > maxDirectionScore)
+		{
+			bestFleeLocation = fleeLocationVector;
+			maxDirectionScore = directionScore;
+		}
+	}
+	DrawDebugCircle(GetWorld(), bestFleeLocation, 100, 50, FColor::Blue, false, 10.f, 0, 5.f, FVector(1, 0, 0), FVector(0, 1, 0), false);
+	return UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), GetPawn()->GetActorLocation(), bestFleeLocation);
+}
+
