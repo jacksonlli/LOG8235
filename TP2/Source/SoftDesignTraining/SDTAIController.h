@@ -71,7 +71,6 @@ protected:
     enum class AIState
     {
         Pursue,
-        GoToLastSeen,
         Flee,
         GoToClosestPickup
     };
@@ -85,7 +84,7 @@ protected:
 	// TArray<ASDTCollectible> listPickups = {}
 
 
-    // List of all pickups coordinates
+    // List of all pickups coordinates---------------------->jackson: peut-etre considerer utiliser la fonction UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASDTCollectible::StaticClass(), Array_de_type_AActor*); pour obtenir les positions dynamiquement
     TArray<FVector2D> listLocation = {  FVector2D(-210., 1670.),
                                         FVector2D(-210., 1330.),
                                         FVector2D(-910., 1330.),
@@ -113,9 +112,12 @@ protected:
     void    UpdateDirection(float deltaTime, FVector directionGoal);
     void    ApplyVelocity(float DeltaTime, FVector velocity);
     void    MoveTowardsDirection(float deltaTime);
-
+	void	SelectPath(UNavigationPath* chosenPath);
+	bool	IsPlayerDetected();
+	UNavigationPath * GetPathToFleeLocation();
 private:
     virtual void GoToBestTarget(float deltaTime) override;
     virtual void ChooseBehavior(float deltaTime) override;
     virtual void ShowNavigationPath() override;
+	
 };
