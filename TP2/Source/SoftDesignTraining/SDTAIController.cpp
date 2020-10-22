@@ -144,7 +144,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     }
 	else
 	{
-		// Sinon, aller vers le pickup le plus proche
+		// Sinon, finir le chemin actuel et aller vers le pickup le plus proche
 		m_state = AIState::GoToClosestPickup;
 	}
     
@@ -175,6 +175,7 @@ void ASDTAIController::AIStateInterrupted()
 {
     StopMovement();
     m_ReachedTarget = true;
+	ShouldRePath = true;
 }
 
 // Finds the closest pickup and computes the path to go at its location
