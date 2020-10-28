@@ -48,13 +48,13 @@ public:
     bool UseShortcuts = false;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-    float RotationRate = 250.f;
+    float RotationRate = 400.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-    float MaxSpeed = 500.f;
+    float MaxSpeed = 400.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-    float Acceleration = 500.f;
+    float Acceleration = 300.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     bool IsWalking = true;
@@ -77,7 +77,7 @@ protected:
     AIState m_state = AIState::GoToClosestPickup;
     void GoToClosestPickup(float deltaTime);
 
-    TArray<FVector> PathToFollow;
+    TArray<FNavPathPoint> PathToFollow;
     int32           CurrentDestinationIndex = 0;
 
 	// List of all pickups
@@ -112,7 +112,8 @@ protected:
     void    UpdateDirection(float deltaTime, FVector directionGoal);
     void    ApplyVelocity(float DeltaTime, FVector velocity);
     void    MoveTowardsDirection(float deltaTime);
-	void	SelectPath(UNavigationPath* chosenPath);
+	void	SelectPath(UNavigationPath* chosenPath, float deltaTime);
+    void    SetPathJumpFlags(UNavigationPath* path, float deltaTime);
 	bool	IsPlayerDetected();
 	UNavigationPath * GetPathToFleeLocation();
 private:

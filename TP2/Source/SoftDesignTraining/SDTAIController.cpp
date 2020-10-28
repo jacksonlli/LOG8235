@@ -60,12 +60,12 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     {
     case ASDTAIController::AIState::Pursue:
 		if (ShouldRePath)
-			SelectPath(UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()));
+			SelectPath(UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()), deltaTime);
 		MoveTowardsDirection(deltaTime);
 		break;
     case ASDTAIController::AIState::Flee:
 		if (ShouldRePath)
-			SelectPath(GetPathToFleeLocation());
+			SelectPath(GetPathToFleeLocation(), deltaTime);
 		MoveTowardsDirection(deltaTime);
         break;
     case ASDTAIController::AIState::GoToClosestPickup:
@@ -95,14 +95,14 @@ void ASDTAIController::ShowNavigationPath()
     {
         DrawDebugLine(
             GetWorld(),
-            PathToFollow[i],
-            PathToFollow[i + 1],
+            PathToFollow[i].Location,
+            PathToFollow[i + 1].Location,
             FColor::White,
             false, -1, 0,
             5.f);
         DrawDebugSphere(
             GetWorld(),
-            PathToFollow[i + 1],
+            PathToFollow[i + 1].Location,
             10.0f, 16,
             FColor::Red,
             false, -1, 0);
@@ -204,7 +204,7 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
 					ASDTCollectible* collectible = dynamic_cast<ASDTCollectible*>(Hit.GetActor());
 					if (collectible->GetStaticMeshComponent()->IsVisible())
 					{
-						UNavigationPath* path = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), FVector(pickupLocation, selfPawn->GetActorLocation().Z));
+						UNavigationPath* path = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), FVector(pickupLocation, selfPawn->GetActorLocation().Z), selfPawn);
 						float cost = (pickupLocation - FVector2D(selfPawn->GetActorLocation())).SizeSquared();
 						if (cost < mincost)
 						{
@@ -217,26 +217,44 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
 			}
         }
 
-		SelectPath(chosenPath);
-        
+		SelectPath(chosenPath, deltaTime);
+        SetPathJumpFlags(chosenPath, deltaTime);
     }
     
         ShowNavigationPath();
         MoveTowardsDirection(deltaTime);
 }
 
-void ASDTAIController::SelectPath(UNavigationPath* chosenPath)
+void ASDTAIController::SelectPath(UNavigationPath* chosenPath, float deltaTime)
 {
 	if (chosenPath->IsValid())
 	{
 		PathToFollow.Empty();
-		for (FNavPathPoint point : chosenPath->GetPath()->GetPathPoints())
-			PathToFollow.Add(point.Location);
+        for (FNavPathPoint point : chosenPath->GetPath()->GetPathPoints())
+        {
+            PathToFollow.Add(point);
+        }
 		CurrentDestinationIndex = 0;
 	}
-
+    
 	ShouldRePath = false;
 }
+
+// Parcourir le chemin et mettre un JumpFlag si on detecte un NavLink
+void ASDTAIController::SetPathJumpFlags(UNavigationPath* path, float deltaTime)
+{
+    for (FNavPathPoint point : path->GetPath()->GetPathPoints())
+    {
+        if (SDTUtils::IsNavLink(point))
+        {
+            uint16 flags = FNavMeshNodeFlags(point.Flags).AreaFlags;
+            SDTUtils::SetNavTypeFlag(flags, SDTUtils::NavType::Jump);
+            uint32 flag32 = flags;
+            point.Flags = flag32 * 2e16;
+        }
+    }
+}
+
 
 FVector ASDTAIController::ComputeDestination(float deltaTime)
 {
