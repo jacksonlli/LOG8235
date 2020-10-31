@@ -241,11 +241,12 @@ void ASDTAIController::ComputePath(UNavigationPath* path, float deltaTime)
     if (path->IsValid())
     {
         PathToFollow.Empty();
+        FNavPathPoint precPoint;
 
         for (FNavPathPoint point : path->GetPath()->GetPathPoints())
         {
 
-            if (SDTUtils::IsNavLink(point))
+            if (SDTUtils::IsNavLink(point) && !SDTUtils::IsNavLink(precPoint))
             {
                 uint16 flags = FNavMeshNodeFlags(point.Flags).AreaFlags;
                 SDTUtils::SetNavTypeFlag(flags, SDTUtils::NavType::Jump);
@@ -254,6 +255,7 @@ void ASDTAIController::ComputePath(UNavigationPath* path, float deltaTime)
             }
 
             PathToFollow.Add(point);
+            precPoint = point;
         }
         CurrentDestinationIndex = 0;
     }
@@ -415,20 +417,20 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
                 // --------------------------- //
         if(CurrentDestinationIndex > 0)
         { 
-        if (SDTUtils::HasJumpFlag(PathToFollow[CurrentDestinationIndex-1]))
-        {
-            APawn* selfPawn = GetPawn();
-            ACharacter* character = Cast<ACharacter>(GetPawn());
-            ASDTAIController* controller = Cast<ASDTAIController>(character->GetController()); // A garder pour le moment
-            auto MovementComponent = character->GetCharacterMovement();
+            if (SDTUtils::HasJumpFlag(PathToFollow[CurrentDestinationIndex-1]))
+            {
+                APawn* selfPawn = GetPawn();
+                ACharacter* character = Cast<ACharacter>(GetPawn());
+                ASDTAIController* controller = Cast<ASDTAIController>(character->GetController()); // A garder pour le moment
+                auto MovementComponent = character->GetCharacterMovement();
 
-            // Paramètre à modifier au besoin
-            MovementComponent->JumpZVelocity = 600.0f;
-            MovementComponent->DoJump(false);
+                // Paramètre à modifier au besoin
+                MovementComponent->JumpZVelocity = 600.0f;
+                MovementComponent->DoJump(false);
             
 
-            GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Red, FString::Printf(TEXT("Saut en cours ")));
-        }
+                GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Red, FString::Printf(TEXT("Saut en cours ")));
+            }
         }
 
         ApplyVelocity(deltaTime, velocity);

@@ -51,7 +51,7 @@ public:
     float MaxSpeed = 400.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-    float Acceleration = 300.f;
+    float Acceleration = 200.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     bool IsWalking = true;
