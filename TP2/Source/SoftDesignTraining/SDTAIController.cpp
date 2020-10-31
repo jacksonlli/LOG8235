@@ -241,12 +241,12 @@ void ASDTAIController::ComputePath(UNavigationPath* path, float deltaTime)
     if (path->IsValid())
     {
         PathToFollow.Empty();
-        FNavPathPoint precPoint;
+        //FNavPathPoint precPoint;
 
         for (FNavPathPoint point : path->GetPath()->GetPathPoints())
         {
 
-            if (SDTUtils::IsNavLink(point) && !SDTUtils::IsNavLink(precPoint))
+            if (SDTUtils::IsNavLink(point)) //&& !SDTUtils::IsNavLink(precPoint))
             {
                 uint16 flags = FNavMeshNodeFlags(point.Flags).AreaFlags;
                 SDTUtils::SetNavTypeFlag(flags, SDTUtils::NavType::Jump);
@@ -255,7 +255,7 @@ void ASDTAIController::ComputePath(UNavigationPath* path, float deltaTime)
             }
 
             PathToFollow.Add(point);
-            precPoint = point;
+            //precPoint = point;
         }
         CurrentDestinationIndex = 0;
     }
@@ -347,13 +347,45 @@ FVector ASDTAIController::ComputeVelocity(float deltaTime, FVector destination)
     FVector velocity = FVector::ZeroVector;
     float speed = MaxSpeed;
 
-    /*if (UseSlowDownForTurns && (IsTurning || (destination - GetActorLocation()).Size() < 200.f) && CurrentDestinationIndex != -1 && CurrentDestinationIndex != PathToFollow.Num() - 1)
-        speed = UseSlowDownForTurns_Behavior(destination, DeltaTime);*/
+    if (IsTurning && CurrentDestinationIndex != -1 && CurrentDestinationIndex != PathToFollow.Num() - 1)
+        speed = ComputeTargetSpeedForTurn(); // UseSlowDownForTurns_Behavior(destination, deltaTime);
+
+    GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, FString::Printf(TEXT("Velocity : %f"), speed));
 
     CurrentSpeed = FMath::Clamp(CurrentSpeed + (Acceleration * deltaTime), 0.f, speed);
     velocity = Direction * CurrentSpeed;
 
     return velocity;
+}
+
+
+float ASDTAIController::ComputeTargetSpeedForTurn()
+{
+    if (CurrentDestinationIndex == PathToFollow.Num() - 1)
+        return -1.f;
+
+    FVector nextDirection = PathToFollow[CurrentDestinationIndex + 1].Location - PathToFollow[CurrentDestinationIndex].Location;
+    nextDirection.Normalize();
+
+    float speedFactor = 1.f;
+
+    if (CurrentDestinationIndex != 0)
+    {
+        //FVector currentDirection = PathToFollow[CurrentDestinationIndex].Location - PathToFollow[CurrentDestinationIndex - 1].Location;
+        //currentDirection.Normalize();
+    
+        FVector currentDirectionStart = GetPawn()->GetActorLocation();
+        FVector currentDirectionEnd = PathToFollow[CurrentDestinationIndex];
+
+        FVector currentDirection = currentDirectionEnd - currentDirectionStart;
+        currentDirection.Normalize();
+
+        speedFactor = 0.5f + FVector::DotProduct(currentDirection, nextDirection) / 2;
+    }
+
+    //speedFactor = (FVector::DotProduct(nextDirection, currentDirection) + 1.f) / 2.f;
+
+    return MaxSpeed * speedFactor;
 }
 
 
@@ -376,14 +408,12 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
     if (PathToFollow.Num() > 0)
     {
         FVector velocity = FVector::ZeroVector;
+        FVector position = GetPawn()->GetActorLocation();
 
         // si on n'est pas a une extremite du chemin
         if (CurrentDestinationIndex > -1 && CurrentDestinationIndex < PathToFollow.Num())
         {
-            FVector position = GetPawn()->GetActorLocation();
             FVector destination = ComputeDestination(deltaTime);
-
-            //GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, FString::Printf(TEXT("Direction : %f, %f, %f"), destination.X, destination.Y, destination.Z));
 
 #ifdef PATH_FOLLOW_DEBUG
             {
@@ -412,30 +442,77 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
             }
         }
 
-        // --------------------------- //
-                // A modifier en remplaçant le IsNavLink par HasJumpFlag
-                // --------------------------- //
-        if(CurrentDestinationIndex > 0)
-        { 
-            if (SDTUtils::HasJumpFlag(PathToFollow[CurrentDestinationIndex-1]))
+        if (CurrentDestinationIndex > 0)
+        {
+            if (SDTUtils::HasJumpFlag(PathToFollow[CurrentDestinationIndex - 1]))
             {
-                APawn* selfPawn = GetPawn();
-                ACharacter* character = Cast<ACharacter>(GetPawn());
-                ASDTAIController* controller = Cast<ASDTAIController>(character->GetController()); // A garder pour le moment
-                auto MovementComponent = character->GetCharacterMovement();
+                if (!AtJumpSegment)
+                {
+                    // Handle starting jump
+                    BaseHeight = GetPawn()->GetActorLocation().Z;
+                    IsWalking = false;
+                    AtJumpSegment = true;
+                    StartJump(deltaTime);
+                    velocity = FVector::OneVector * MaxSpeed;
+                }
+                else
+                {
+                    // Update jump
+                    FVector jumpStart = PathToFollow[CurrentDestinationIndex - 1].Location;
+                    float sizeJump = FVector2D(PathToFollow[CurrentDestinationIndex].Location - jumpStart).Size();
+                    float distFromJumpStart = FVector2D(GetPawn()->GetActorLocation() - jumpStart).Size();
 
-                // Paramètre à modifier au besoin
-                MovementComponent->JumpZVelocity = 600.0f;
-                MovementComponent->DoJump(false);
-            
-
-                GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Red, FString::Printf(TEXT("Saut en cours ")));
+                    //GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("distFromJumpStart : %f"), distFromJumpStart/sizeJump));
+                    UpdateJump(distFromJumpStart / sizeJump, deltaTime);
+                }
             }
-        }
+            else
+            {
+                // Handle normal segments
+                if (Landing)
+                    GetPawn()->SetActorLocation(FVector(FVector2D(position), BaseHeight));
+                InAir = false;
+                Landing = false;
+                AtJumpSegment = false;
+                IsWalking = true;
+            }
 
-        ApplyVelocity(deltaTime, velocity);
+            GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Pawn Height : %f"), GetPawn()->GetActorLocation().Z));
+            ApplyVelocity(deltaTime, velocity);
+        }
     }
 }
+
+
+void ASDTAIController::StartJump(float deltaTime)
+{
+    /*APawn* selfPawn = GetPawn();
+    ACharacter* character = Cast<ACharacter>(GetPawn());
+    ASDTAIController* controller = Cast<ASDTAIController>(character->GetController()); // A garder pour le moment
+    auto MovementComponent = character->GetCharacterMovement();
+    
+    // Paramètre à modifier au besoin
+    MovementComponent->JumpZVelocity = 600.0f;
+    MovementComponent->DoJump(false);*/
+
+    InAir = true;
+}
+
+void ASDTAIController::UpdateJump(float curveTime, float deltaTime)
+{
+    float updateHeight = JumpCurve->GetFloatValue(curveTime) * JumpApexHeight;
+    FVector2D position2D(GetPawn()->GetActorLocation());
+
+    GetPawn()->SetActorLocation(FVector(position2D, BaseHeight + updateHeight));
+    //GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Pawn Height : %f"), GetPawn()->GetActorLocation().Z));
+
+    if (curveTime > 0.8)
+    {
+        InAir = false;
+        Landing = true;
+    }
+}
+
 
 bool ASDTAIController::IsPlayerDetected()
 {

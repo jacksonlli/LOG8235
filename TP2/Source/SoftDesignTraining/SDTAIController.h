@@ -98,12 +98,16 @@ protected:
 
     FVector ComputeDestination(float DeltaTime);
     FVector ComputeVelocity(float DeltaTime, FVector destination);
+    float   ComputeTargetSpeedForTurn();
+
     FVector Direction = FVector(0.f, 1.f, 0.f);
     float   CurrentSpeed = 0.f;
     bool    IsTurning = false;
     bool    ShouldRePath = true;
     float   SlowDownTargetSpeed = -1.f;
+    FVector SlowDownStartPos = FVector::ZeroVector;
     int32   IndexAfterSlowDown = -1;
+    float   BaseHeight = 0.f;
 
     void    UpdateDirection(float deltaTime, FVector directionGoal);
     void    ApplyVelocity(float DeltaTime, FVector velocity);
@@ -112,6 +116,8 @@ protected:
 	bool	IsPlayerDetected();
 	UNavigationPath * GetPathToFleeLocation();
     void    UseIntermediaryDestination_Behavior(FVector2D position2D, FVector2D destination2D, FVector& destination);
+    void    StartJump(float deltaTime);
+    void    UpdateJump(float curveTime, float deltaTime);
 
 private:
     virtual void GoToBestTarget(float deltaTime) override;
