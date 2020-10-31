@@ -410,6 +410,27 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
             }
         }
 
+        // --------------------------- //
+                // A modifier en remplaçant le IsNavLink par HasJumpFlag
+                // --------------------------- //
+        if(CurrentDestinationIndex > 0)
+        { 
+        if (SDTUtils::HasJumpFlag(PathToFollow[CurrentDestinationIndex-1]))
+        {
+            APawn* selfPawn = GetPawn();
+            ACharacter* character = Cast<ACharacter>(GetPawn());
+            ASDTAIController* controller = Cast<ASDTAIController>(character->GetController()); // A garder pour le moment
+            auto MovementComponent = character->GetCharacterMovement();
+
+            // Paramètre à modifier au besoin
+            MovementComponent->JumpZVelocity = 600.0f;
+            MovementComponent->DoJump(false);
+            
+
+            GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Red, FString::Printf(TEXT("Saut en cours ")));
+        }
+        }
+
         ApplyVelocity(deltaTime, velocity);
     }
 }
