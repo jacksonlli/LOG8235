@@ -60,12 +60,12 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     {
     case ASDTAIController::AIState::Pursue:
 		if (ShouldRePath)
-			SelectPath(UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()), deltaTime);
+			ComputePath(UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()), deltaTime);
 		MoveTowardsDirection(deltaTime);
 		break;
     case ASDTAIController::AIState::Flee:
 		if (ShouldRePath)
-			SelectPath(GetPathToFleeLocation(), deltaTime);
+            ComputePath(GetPathToFleeLocation(), deltaTime);
 		MoveTowardsDirection(deltaTime);
         break;
     case ASDTAIController::AIState::GoToClosestPickup:
@@ -100,12 +100,24 @@ void ASDTAIController::ShowNavigationPath()
             FColor::White,
             false, -1, 0,
             5.f);
-        DrawDebugSphere(
-            GetWorld(),
-            PathToFollow[i + 1].Location,
-            10.0f, 16,
-            FColor::Red,
-            false, -1, 0);
+        if (SDTUtils::HasJumpFlag(PathToFollow[i]))
+        {
+            DrawDebugSphere(
+                GetWorld(),
+                PathToFollow[i].Location,
+                20.0f, 16,
+                FColor::Green,
+                false, -1, 0);
+        }
+        else
+        {
+            DrawDebugSphere(
+                GetWorld(),
+                PathToFollow[i].Location,
+                10.0f, 16,
+                FColor::Red,
+                false, -1, 0);
+        }
     }
 }
 
@@ -216,43 +228,37 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
 				
 			}
         }
-
-		SelectPath(chosenPath, deltaTime);
-        SetPathJumpFlags(chosenPath, deltaTime);
+        ComputePath(chosenPath, deltaTime);
     }
     
         ShowNavigationPath();
         MoveTowardsDirection(deltaTime);
 }
 
-void ASDTAIController::SelectPath(UNavigationPath* chosenPath, float deltaTime)
+// Parcourir le chemin et mettre un JumpFlag si on detecte un NavLink
+void ASDTAIController::ComputePath(UNavigationPath* path, float deltaTime)
 {
-	if (chosenPath->IsValid())
-	{
-		PathToFollow.Empty();
-        for (FNavPathPoint point : chosenPath->GetPath()->GetPathPoints())
+    if (path->IsValid())
+    {
+        PathToFollow.Empty();
+
+        for (FNavPathPoint point : path->GetPath()->GetPathPoints())
         {
+
+            if (SDTUtils::IsNavLink(point))
+            {
+                uint16 flags = FNavMeshNodeFlags(point.Flags).AreaFlags;
+                SDTUtils::SetNavTypeFlag(flags, SDTUtils::NavType::Jump);
+                uint32 flag32 = flags;
+                point.Flags = flag32 * 2e16;
+            }
+
             PathToFollow.Add(point);
         }
-		CurrentDestinationIndex = 0;
-	}
-    
-	ShouldRePath = false;
-}
-
-// Parcourir le chemin et mettre un JumpFlag si on detecte un NavLink
-void ASDTAIController::SetPathJumpFlags(UNavigationPath* path, float deltaTime)
-{
-    for (FNavPathPoint point : path->GetPath()->GetPathPoints())
-    {
-        if (SDTUtils::IsNavLink(point))
-        {
-            uint16 flags = FNavMeshNodeFlags(point.Flags).AreaFlags;
-            SDTUtils::SetNavTypeFlag(flags, SDTUtils::NavType::Jump);
-            uint32 flag32 = flags;
-            point.Flags = flag32 * 2e16;
-        }
+        CurrentDestinationIndex = 0;
     }
+
+    ShouldRePath = false;
 }
 
 
@@ -261,9 +267,6 @@ FVector ASDTAIController::ComputeDestination(float deltaTime)
     FVector2D position2D(GetPawn()->GetActorLocation());
     FVector destination(PathToFollow[CurrentDestinationIndex]);
     FVector2D destination2D(destination);
-
-    if (UseShortcuts)
-        UseShortcuts_Behavior(destination2D, destination);
 
     if (position2D.Equals(destination2D, 10.f))
     {
@@ -280,76 +283,22 @@ FVector ASDTAIController::ComputeDestination(float deltaTime)
         }
     }
 
-    /*if (UseIntermediaryDestinations && !position2D.Equals(destination2D, 20.f) && CurrentDestinationIndex > 0)
+    if (!position2D.Equals(destination2D, 20.f) && CurrentDestinationIndex > 0)
         UseIntermediaryDestination_Behavior(position2D, destination2D, destination);
-        */
+        
     return destination;
 }
 
-
-// Breaks the path segment into smaller segments
-void ASDTAIController::UseShortcuts_Behavior(FVector2D& destination2D, FVector& destination)
+// For smoother movements
+void ASDTAIController::UseIntermediaryDestination_Behavior(FVector2D position2D, FVector2D destination2D, FVector& destination)
 {
-    if (CurrentDestinationIndex != PathToFollow.Num() - 1)
-    {
-        TArray<FVector> sampleShortcutPoints;
+    FVector lineStart = PathToFollow[CurrentDestinationIndex - 1];
+    FVector lineEnd = PathToFollow[CurrentDestinationIndex];
+    FVector lineDirection = lineEnd - lineStart;
+    lineDirection.Normalize();
 
-        sampleShortcutPoints.Empty();
-        sampleShortcutPoints.Reserve(SHORTCUT_SAMPLE_NUM);              // prepare space in the array
-        FVector startNextPath = PathToFollow[CurrentDestinationIndex];  // path segment
-        FVector endNextPath = PathToFollow[CurrentDestinationIndex + 1];
-
-        FVector displacementSamples = (endNextPath - startNextPath) / SHORTCUT_SAMPLE_NUM;
-
-        for (int i = 0; i < SHORTCUT_SAMPLE_NUM; i++)
-        {
-            FVector sample = startNextPath + ((i + 1) * displacementSamples);   // fraction of the path segment
-            sampleShortcutPoints.Push(sample);
-#ifdef PATH_FOLLOW_DEBUG
-            {
-                DrawDebugSphere(
-                    GetWorld(),
-                    sample,
-                    10.f, 20,
-                    FColor::Emerald,
-                    false, -1, 0
-                );
-            }
-#endif //PATH_FOLLOW_DEBUG
-        }
-
-        // Decide what is the farthest sample point reachable and sets it as the new destination
-        FVector originBB = FVector::ZeroVector;
-        FVector extentsBB;
-        GetPawn()->GetActorBounds(true, originBB, extentsBB);
-        extentsBB.Z = 0.f;
-
-        for (int i = SHORTCUT_SAMPLE_NUM - 1; i >= 0; i--)
-        {
-            FVector start = GetPawn()->GetActorLocation();
-            start.Z = originBB.Z;
-            FVector end = sampleShortcutPoints[i];
-            end.Z = originBB.Z;
-
-            FVector sideVectorLeft = FVector::CrossProduct((end - start), GetPawn()->GetActorUpVector());
-            sideVectorLeft.Normalize();
-            sideVectorLeft *= extentsBB.Size();
-            FVector sideVectorRight = -sideVectorLeft;
-
-            FHitResult HitOut;
-            if (!SDTUtils::Raycast(GetWorld(), start + sideVectorLeft, end + sideVectorLeft)
-                &&
-                !SDTUtils::Raycast(GetWorld(), start + sideVectorRight, end + sideVectorRight)
-                )
-            {
-                destination = sampleShortcutPoints[i];
-                destination2D = FVector2D(sampleShortcutPoints[i]);
-                if (destination.Equals(PathToFollow[CurrentDestinationIndex + 1]))
-                    CurrentDestinationIndex++;
-                break;
-            }
-        }
-    }
+    destination = (FMath::ClosestPointOnLine(lineStart, lineEnd, GetPawn()->GetActorLocation()) + destination) / 2;
+    DrawDebugSphere(GetWorld(), destination, 20.f, 20, FColor::Red);
 }
 
 
@@ -420,7 +369,6 @@ void ASDTAIController::ApplyVelocity(float deltaTime, FVector velocity)
 }
 
 
-
 void ASDTAIController::MoveTowardsDirection(float deltaTime)
 {
     if (PathToFollow.Num() > 0)
@@ -453,7 +401,6 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
         else
         {
             velocity = ComputeVelocity(-deltaTime, GetPawn()->GetActorLocation() + Direction);
-            GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, FString::Printf(TEXT("Direction : %f, %f, %f"), Direction.X, Direction.Y, Direction.Z));
 
             if (velocity.SizeSquared() < 0.1f)
             {

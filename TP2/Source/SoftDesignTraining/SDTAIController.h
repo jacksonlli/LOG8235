@@ -45,9 +45,6 @@ public:
     bool Landing = false;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-    bool UseShortcuts = false;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float RotationRate = 400.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
@@ -108,14 +105,14 @@ protected:
     float   SlowDownTargetSpeed = -1.f;
     int32   IndexAfterSlowDown = -1;
 
-    void    UseShortcuts_Behavior(FVector2D& destination2D, FVector& destination);
     void    UpdateDirection(float deltaTime, FVector directionGoal);
     void    ApplyVelocity(float DeltaTime, FVector velocity);
     void    MoveTowardsDirection(float deltaTime);
-	void	SelectPath(UNavigationPath* chosenPath, float deltaTime);
-    void    SetPathJumpFlags(UNavigationPath* path, float deltaTime);
+    void    ComputePath(UNavigationPath* path, float deltaTime);
 	bool	IsPlayerDetected();
 	UNavigationPath * GetPathToFleeLocation();
+    void    UseIntermediaryDestination_Behavior(FVector2D position2D, FVector2D destination2D, FVector& destination);
+
 private:
     virtual void GoToBestTarget(float deltaTime) override;
     virtual void ChooseBehavior(float deltaTime) override;
