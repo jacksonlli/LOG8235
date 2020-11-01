@@ -59,14 +59,14 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 	//Move to target depending on current behavior
 	switch (m_state)
 	{
-	case ASDTAIController::AIState::Pursue:
-		if (ShouldRePath)
+	case ASDTAIController::AIState::Pursue://si on est en mode Poursuite, calculer un chemin vers le joueur et se diriger sur ce chemin
+		if (ShouldRePath)//recalculer le chemin si on voit le joueur, si oui on met en jour le chemin. Sinon, on suis le chemin existant qui mene vers le LKP
 			ComputePath(UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()), deltaTime);
 		goToLKP = true;
 		MoveTowardsDirection(deltaTime);
 		break;
-	case ASDTAIController::AIState::Flee:
-		if (ShouldRePath)
+	case ASDTAIController::AIState::Flee://si on est en mode Fuite, calculer le chemin vers le fleelocation approprié
+		if (ShouldRePath)//recalculer le chemin si le joueur apparait dans le champs de vision de l'agent (aka l'agent se dirige vers le joueur powered-up)
 			ComputePath(GetPathToFleeLocation(), deltaTime);
 		TimeLeftFlee = 3.f;
 		MoveTowardsDirection(deltaTime);
@@ -147,20 +147,20 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 
 	if (IsPlayerDetected())// Si on detecte le joueur, choisir de le poursuivre ou le fuir
 	{
-		ShouldRePath = true; //make sure the agent repaths based off new player coordinates while player is detected
-		if (SDTUtils::IsPlayerPoweredUp(GetWorld()))
+		ShouldRePath = true; //s'assurez-vous que l'agent repath en fonction des coordonnées du joueur lorsque le joueur est détecté
+		if (SDTUtils::IsPlayerPoweredUp(GetWorld()))//si le joueur est-powered-up l<agent entre en mode fuite
 		{
 			m_state = AIState::Flee;
 
 		}
 		else {
-			m_state = AIState::Pursue;
+			m_state = AIState::Pursue;//sinon l'agent entre en mode pousuite
 		}
 
 	}
 	else
 	{
-		// Sinon, finir le chemin actuel et aller vers le pickup le plus proche
+		// Si on ne voit pas le joeur, finir le chemin actuel et aller vers le pickup le plus proche
 		m_state = AIState::GoToClosestPickup;
 	}
 
@@ -191,7 +191,7 @@ void ASDTAIController::AIStateInterrupted()
 {
 	StopMovement();
 	m_ReachedTarget = true;
-	ShouldRePath = true;
+	ShouldRePath = true;//recalculer le repath si l'agent meure
 }
 
 // Finds the closest pickup and computes the path to go at its location
@@ -567,24 +567,24 @@ bool ASDTAIController::IsPlayerDetected()
 	return playerInDetectionZone && !wallInBetween;
 }
 
-UNavigationPath* ASDTAIController::GetPathToFleeLocation()
+UNavigationPath* ASDTAIController::GetPathToFleeLocation()//permet de trouver le chemin vers le fleelocation approprié
 {
 	TArray<AActor*> foundLocations;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASDTFleeLocation::StaticClass(), foundLocations);
-	FVector directionAwayFromPlayer = (GetPawn()->GetActorLocation() - GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()).GetSafeNormal();
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASDTFleeLocation::StaticClass(), foundLocations);//trouve tous les fleelocations
+	FVector directionAwayFromPlayer = (GetPawn()->GetActorLocation() - GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()).GetSafeNormal();//trouve le vecteur de direction opposé au joueur
 	float maxDirectionScore = -999999;
 	FVector bestFleeLocation;
-	for (AActor* fleeLocationObject : foundLocations)
+	for (AActor* fleeLocationObject : foundLocations)//itéré à travers tous les fleelocations pour trouver le meilleur chemin
 	{
 		FVector fleeLocationVector = fleeLocationObject->GetActorLocation();
 		FVector directionToFleeLocation = (fleeLocationVector - GetPawn()->GetActorLocation()).GetSafeNormal();
-		float directionScore = FVector::DotProduct(directionAwayFromPlayer, directionToFleeLocation);
+		float directionScore = FVector::DotProduct(directionAwayFromPlayer, directionToFleeLocation);//le meilleur chemin est celui ou l'angle entre le vecteur de direction vers le fleelocation et le vecteur direction opposé au joueur est la plus petite
 		if (directionScore > maxDirectionScore)
 		{
 			bestFleeLocation = fleeLocationVector;
 			maxDirectionScore = directionScore;
 		}
 	}
-	DrawDebugCircle(GetWorld(), bestFleeLocation, 100, 50, FColor::Blue, false, 10.f, 0, 5.f, FVector(1, 0, 0), FVector(0, 1, 0), false);
+	//DrawDebugCircle(GetWorld(), bestFleeLocation, 100, 50, FColor::Blue, false, 10.f, 0, 5.f, FVector(1, 0, 0), FVector(0, 1, 0), false);
 	return UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), GetPawn()->GetActorLocation(), bestFleeLocation);
 }
