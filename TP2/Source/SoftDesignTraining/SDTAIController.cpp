@@ -216,11 +216,11 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
 					ASDTCollectible* collectible = dynamic_cast<ASDTCollectible*>(Hit.GetActor());
 					if (collectible->GetStaticMeshComponent()->IsVisible())
 					{
-						UNavigationPath* path = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), FVector(pickupLocation, selfPawn->GetActorLocation().Z), selfPawn);
 						float cost = (pickupLocation - FVector2D(selfPawn->GetActorLocation())).SizeSquared();
 						if (cost < mincost)
 						{
 							mincost = cost;
+							UNavigationPath* path = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), FVector(pickupLocation, selfPawn->GetActorLocation().Z), selfPawn);
 							chosenPath = path;
 						}
 					}
@@ -270,7 +270,7 @@ FVector ASDTAIController::ComputeDestination(float deltaTime)
 	FVector destination(PathToFollow[CurrentDestinationIndex]);
 	FVector2D destination2D(destination);
 
-	if (position2D.Equals(destination2D, 10.f))
+	if (position2D.Equals(destination2D, 10.f) || CurrentDestinationIndex == 0)
 	{
 		CurrentDestinationIndex++;
 
@@ -405,6 +405,7 @@ void ASDTAIController::ApplyVelocity(float deltaTime, FVector velocity)
 
 void ASDTAIController::MoveTowardsDirection(float deltaTime)
 {
+	GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Index : %i"), CurrentDestinationIndex));
 	if (PathToFollow.Num() > 0)
 	{
 		FVector velocity = FVector::ZeroVector;
@@ -438,6 +439,7 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
 			{
 				CurrentSpeed = 0.f;
 				CurrentDestinationIndex = -1.f;
+				
 				//IsWalking = false;
 			}
 		}
@@ -478,6 +480,7 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
 			}
 
 			GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Pawn Height : %f"), GetPawn()->GetActorLocation().Z));
+			GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Index : %i"), CurrentDestinationIndex));
 			ApplyVelocity(deltaTime, velocity);
 		}
 	}
