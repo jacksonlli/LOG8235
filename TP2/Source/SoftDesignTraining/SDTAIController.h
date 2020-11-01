@@ -44,6 +44,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
 		bool Landing = false;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
+		float CurrentSpeed = 0.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
 		float RotationRate = 400.f;
 
@@ -77,33 +80,12 @@ protected:
 	TArray<FNavPathPoint> PathToFollow;
 	int32           CurrentDestinationIndex = 0;
 
-	// List of all pickups
-	// TArray<ASDTCollectible> listPickups = {}
-
-
-	// List of all pickups coordinates---------------------->jackson: peut-etre considerer utiliser la fonction UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASDTCollectible::StaticClass(), Array_de_type_AActor*); pour obtenir les positions dynamiquement
-	/*TArray<FVector2D> listLocation = { FVector2D(-210., 1670.),
-										FVector2D(-210., 1330.),
-										FVector2D(-910., 1330.),
-										FVector2D(-700., -380.),
-										FVector2D(-1310., -1290.),
-										FVector2D(-1640., -1720.),
-										FVector2D(610., -1730.),
-										FVector2D(-1600., 1650.),
-										FVector2D(-460., 490.),
-										FVector2D(220., -1270),
-										FVector2D(1030., 280.),
-										FVector2D(310., -360.)
-
-	};*/
-	
-
 	FVector ComputeDestination(float DeltaTime);
 	FVector ComputeVelocity(float DeltaTime, FVector destination);
 	float   ComputeTargetSpeedForTurn();
 
 	FVector Direction = FVector(0.f, 1.f, 0.f);
-	float   CurrentSpeed = 0.f;
+	
 	bool    IsTurning = false;
 	bool    ShouldRePath = true;
 	float   SlowDownTargetSpeed = -1.f;

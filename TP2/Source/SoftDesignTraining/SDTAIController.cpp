@@ -213,19 +213,39 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
 		ASDTCollectible* collectible = dynamic_cast<ASDTCollectible*>(collectibleObject);
 		if (collectible->GetStaticMeshComponent()->IsVisible())
 		{
-			float cost = (pickupLocation - FVector2D(selfPawn->GetActorLocation())).SizeSquared();
-			if (cost < mincost)
+			//float cost = (pickupLocation - FVector2D(selfPawn->GetActorLocation())).SizeSquared();
+			UNavigationPath* path = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), FVector(pickupLocation, selfPawn->GetActorLocation().Z), selfPawn);
+			if (path->IsValid())
 			{
-				mincost = cost;
-				UNavigationPath* path = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), FVector(pickupLocation, selfPawn->GetActorLocation().Z), selfPawn);
-				chosenPath = path;
-				newDestination = pickupLocation;
+				float cost = 0;
+				FNavPathPoint currentPoint;
+				FNavPathPoint oldPoint;
+				for (FNavPathPoint point : path->GetPath()->GetPathPoints())
+				{
+					if (cost == 0)
+					{
+						currentPoint = point;
+						cost = cost + 1.f;
+					}
+					else
+					{
+						oldPoint = currentPoint;
+						currentPoint = point;
+						cost = cost + (FVector2D(currentPoint) - FVector2D(oldPoint)).SizeSquared();
+					}
+				}
+				if (cost < mincost)
+				{
+					mincost = cost;
+					chosenPath = path;
+					newDestination = pickupLocation;
+				}
 			}
 		}
 	}
 	
 
-	if (ShouldRePath || (destination2D - newDestination).SizeSquared() > 10.f)
+	if ((ShouldRePath || (destination2D - newDestination).SizeSquared() > 10.f) && AtJumpSegment == false)
 	{
 		ComputePath(chosenPath, deltaTime);
 	}
