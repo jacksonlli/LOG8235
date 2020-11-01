@@ -33,6 +33,7 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 		if (position2D.Equals(destination2D, 10.f))
 		{
 			ShouldRePath = true;
+			goToLKP = false;
 		}
 		TArray<TEnumAsByte<EObjectTypeQuery>> detectionTraceObjectTypes;
 		detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_COLLECTIBLE));
@@ -61,15 +62,18 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 	case ASDTAIController::AIState::Pursue:
 		if (ShouldRePath)
 			ComputePath(UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()), deltaTime);
+		goToLKP = true;
 		MoveTowardsDirection(deltaTime);
 		break;
 	case ASDTAIController::AIState::Flee:
 		if (ShouldRePath)
 			ComputePath(GetPathToFleeLocation(), deltaTime);
+		TimeLeftFlee = 3.f;
 		MoveTowardsDirection(deltaTime);
 		break;
 	case ASDTAIController::AIState::GoToClosestPickup:
 		GoToClosestPickup(deltaTime);
+		TimeLeftFlee = std::max(TimeLeftFlee - deltaTime, 0.f);
 		break;
 	default:
 		break;
@@ -244,43 +248,12 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
 		}
 	}
 	
-
-	if ((ShouldRePath || (destination2D - newDestination).SizeSquared() > 10.f) && AtJumpSegment == false)
+	// Si on est pas dans un saut et qu'on doit recalculer un chemin ou que la destination a changé
+	// Et qu'on est pas dans un état d'intéraction avec le joueur (fuite ou recherche de la dernière position
+	if ((ShouldRePath || (destination2D - newDestination).SizeSquared() > 10.f) && AtJumpSegment == false && goToLKP == false  && TimeLeftFlee == 0.f)
 	{
 		ComputePath(chosenPath, deltaTime);
 	}
-	/*	// Choix du pickup le plus proche
-		float mincost = 9999999999;
-		UNavigationPath* chosenPath = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), selfPawn->GetActorLocation());
-		for (const FVector2D& pickupLocation : listLocation)
-		{
-			TArray<TEnumAsByte<EObjectTypeQuery>> detectionTraceObjectTypes;
-			detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_COLLECTIBLE));
-
-			TArray<FHitResult> detectedPickup;
-			bool isHits = GetWorld()->SweepMultiByObjectType(detectedPickup, FVector(pickupLocation, 245.f), FVector(pickupLocation, 255.f), FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
-
-			if (isHits)
-			{
-				for (FHitResult Hit : detectedPickup)
-				{
-					ASDTCollectible* collectible = dynamic_cast<ASDTCollectible*>(Hit.GetActor());
-					if (collectible->GetStaticMeshComponent()->IsVisible())
-					{
-						float cost = (pickupLocation - FVector2D(selfPawn->GetActorLocation())).SizeSquared();
-						if (cost < mincost)
-						{
-							mincost = cost;
-							UNavigationPath* path = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), FVector(pickupLocation, selfPawn->GetActorLocation().Z), selfPawn);
-							chosenPath = path;
-						}
-					}
-				}
-
-			}
-		}
-		ComputePath(chosenPath, deltaTime);
-	}*/
 
 	ShowNavigationPath();
 	MoveTowardsDirection(deltaTime);

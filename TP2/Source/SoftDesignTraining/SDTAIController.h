@@ -88,6 +88,8 @@ protected:
 	
 	bool    IsTurning = false;
 	bool    ShouldRePath = true;
+	bool	goToLKP = false;
+	float   TimeLeftFlee = 0.f;
 	float   SlowDownTargetSpeed = -1.f;
 	FVector SlowDownStartPos = FVector::ZeroVector;
 	int32   IndexAfterSlowDown = -1;
