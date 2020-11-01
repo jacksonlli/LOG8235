@@ -30,7 +30,7 @@ public:
 		UCurveFloat* JumpCurve;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-		float JumpApexHeight = 300.f;
+		float JumpApexHeight = 200.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
 		float JumpSpeed = 1.f;
