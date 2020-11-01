@@ -196,9 +196,40 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
 	APawn* selfPawn = GetPawn();
 	if (!selfPawn)
 		return;
-	if (ShouldRePath)
+
+	TArray<AActor*> foundLocations;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASDTCollectible::StaticClass(), foundLocations);
+	FVector destination(0.f, 0.f, 0.f);
+	if (PathToFollow.Num() > 0) { destination = PathToFollow.Last(); }
+	
+	FVector2D destination2D(destination);
+	FVector2D newDestination(0.f, 0.f);
+	float mincost = 9999999999;
+	UNavigationPath* chosenPath = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), selfPawn->GetActorLocation());;
+	// On regarde si la destination actuelle est toujours le pickup le plus proche
+	for (AActor* collectibleObject : foundLocations)
 	{
-		// Choix du pickup le plus proche
+		FVector2D pickupLocation = FVector2D(collectibleObject->GetActorLocation());
+		ASDTCollectible* collectible = dynamic_cast<ASDTCollectible*>(collectibleObject);
+		if (collectible->GetStaticMeshComponent()->IsVisible())
+		{
+			float cost = (pickupLocation - FVector2D(selfPawn->GetActorLocation())).SizeSquared();
+			if (cost < mincost)
+			{
+				mincost = cost;
+				UNavigationPath* path = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), FVector(pickupLocation, selfPawn->GetActorLocation().Z), selfPawn);
+				chosenPath = path;
+				newDestination = pickupLocation;
+			}
+		}
+	}
+	
+
+	if (ShouldRePath || (destination2D - newDestination).SizeSquared() > 10.f)
+	{
+		ComputePath(chosenPath, deltaTime);
+	}
+	/*	// Choix du pickup le plus proche
 		float mincost = 9999999999;
 		UNavigationPath* chosenPath = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), selfPawn->GetActorLocation());
 		for (const FVector2D& pickupLocation : listLocation)
@@ -229,7 +260,7 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
 			}
 		}
 		ComputePath(chosenPath, deltaTime);
-	}
+	}*/
 
 	ShowNavigationPath();
 	MoveTowardsDirection(deltaTime);
