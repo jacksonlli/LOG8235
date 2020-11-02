@@ -23,18 +23,20 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
 
 void ASDTAIController::GoToBestTarget(float deltaTime)
 {
-
+	// On vérifie si un chemin doit être recalculé
 	if (PathToFollow.Num() > 0 && AtJumpSegment == false)
 	{
 		FVector2D position2D(GetPawn()->GetActorLocation());
 		FVector destination(PathToFollow.Last());
 		FVector2D destination2D(destination);
-		//GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, FString::Printf(TEXT("Repath: %f, %f"), destination2D.X, destination2D.Y));
+		// Si on est arrivé au bout du chemin 
 		if (position2D.Equals(destination2D, 10.f))
 		{
 			ShouldRePath = true;
 			goToLKP = false;
 		}
+
+		// Si le pickup n'est plus visible
 		TArray<TEnumAsByte<EObjectTypeQuery>> detectionTraceObjectTypes;
 		detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_COLLECTIBLE));
 
@@ -49,7 +51,6 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 				if (!collectible->GetStaticMeshComponent()->IsVisible())
 				{
 					ShouldRePath = true;
-
 				}
 			}
 		}
@@ -62,13 +63,13 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 	case ASDTAIController::AIState::Pursue://si on est en mode Poursuite, calculer un chemin vers le joueur et se diriger sur ce chemin
 		if (ShouldRePath)//recalculer le chemin si on voit le joueur, si oui on met en jour le chemin. Sinon, on suis le chemin existant qui mene vers le LKP
 			ComputePath(UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), GetPawn()->GetActorLocation(), GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation()), deltaTime);
-		goToLKP = true;
+		goToLKP = true; // Permet d'aller à la dernière position connue lorsqu'on perd le joueur de vue
 		MoveTowardsDirection(deltaTime);
 		break;
 	case ASDTAIController::AIState::Flee://si on est en mode Fuite, calculer le chemin vers le fleelocation approprié
 		if (ShouldRePath)//recalculer le chemin si le joueur apparait dans le champs de vision de l'agent (aka l'agent se dirige vers le joueur powered-up)
 			ComputePath(GetPathToFleeLocation(), deltaTime);
-		TimeLeftFlee = 3.f;
+		TimeLeftFlee = 3.f; // Permet de s'enfuir pendant 3 secondes minimum
 		MoveTowardsDirection(deltaTime);
 		break;
 	case ASDTAIController::AIState::GoToClosestPickup:
@@ -160,7 +161,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 	}
 	else
 	{
-		// Si on ne voit pas le joeur, finir le chemin actuel et aller vers le pickup le plus proche
+		// Si on ne voit pas le joueur aller vers le pickup le plus proche
 		m_state = AIState::GoToClosestPickup;
 	}
 
@@ -191,7 +192,7 @@ void ASDTAIController::AIStateInterrupted()
 {
 	StopMovement();
 	m_ReachedTarget = true;
-	ShouldRePath = true;//recalculer le repath si l'agent meure
+	ShouldRePath = true;//recalculer le repath si l'agent meurt
 }
 
 // Finds the closest pickup and computes the path to go at its location
@@ -201,11 +202,11 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
 	if (!selfPawn)
 		return;
 
+	// Recherche de tout les pickup et leurs positions
 	TArray<AActor*> foundLocations;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASDTCollectible::StaticClass(), foundLocations);
 	FVector destination(0.f, 0.f, 0.f);
 	if (PathToFollow.Num() > 0) { destination = PathToFollow.Last(); }
-	
 	FVector2D destination2D(destination);
 	FVector2D newDestination(0.f, 0.f);
 	float mincost = 9999999999;
@@ -218,6 +219,8 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
 		if (collectible->GetStaticMeshComponent()->IsVisible())
 		{
 			//float cost = (pickupLocation - FVector2D(selfPawn->GetActorLocation())).SizeSquared();
+			
+			// Le critère est la longueur totale du chemin à parcourir
 			UNavigationPath* path = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), selfPawn->GetActorLocation(), FVector(pickupLocation, selfPawn->GetActorLocation().Z), selfPawn);
 			if (path->IsValid())
 			{
@@ -247,10 +250,10 @@ void ASDTAIController::GoToClosestPickup(float deltaTime)
 			}
 		}
 	}
-	
+
 	// Si on est pas dans un saut et qu'on doit recalculer un chemin ou que la destination a changé
-	// Et qu'on est pas dans un état d'intéraction avec le joueur (fuite ou recherche de la dernière position
-	if ((ShouldRePath || (destination2D - newDestination).SizeSquared() > 10.f) && AtJumpSegment == false && goToLKP == false  && TimeLeftFlee == 0.f)
+	// Et qu'on est pas dans un état d'intéraction avec le joueur (fuite ou recherche de la dernière position)
+	if ((ShouldRePath || (destination2D - newDestination).SizeSquared() > 10.f) && AtJumpSegment == false && goToLKP == false && TimeLeftFlee == 0.f)
 	{
 		ComputePath(chosenPath, deltaTime);
 	}
@@ -265,12 +268,11 @@ void ASDTAIController::ComputePath(UNavigationPath* path, float deltaTime)
 	if (path->IsValid())
 	{
 		PathToFollow.Empty();
-		//FNavPathPoint precPoint;
 
 		for (FNavPathPoint point : path->GetPath()->GetPathPoints())
 		{
-
-			if (SDTUtils::IsNavLink(point)) //&& !SDTUtils::IsNavLink(precPoint))
+			// On met des flags sur les points ayant des Navlinks pour détecter lorsqu'il faut sauter
+			if (SDTUtils::IsNavLink(point))
 			{
 				uint16 flags = FNavMeshNodeFlags(point.Flags).AreaFlags;
 				SDTUtils::SetNavTypeFlag(flags, SDTUtils::NavType::Jump);
@@ -279,7 +281,6 @@ void ASDTAIController::ComputePath(UNavigationPath* path, float deltaTime)
 			}
 
 			PathToFollow.Add(point);
-			//precPoint = point;
 		}
 		CurrentDestinationIndex = 0;
 	}
@@ -294,6 +295,7 @@ FVector ASDTAIController::ComputeDestination(float deltaTime)
 	FVector destination(PathToFollow[CurrentDestinationIndex]);
 	FVector2D destination2D(destination);
 
+	// Permet de suivre le chemin en mettant à jour la prochaine destination
 	if (position2D.Equals(destination2D, 10.f) || CurrentDestinationIndex == 0)
 	{
 		CurrentDestinationIndex++;
@@ -374,7 +376,7 @@ FVector ASDTAIController::ComputeVelocity(float deltaTime, FVector destination)
 	if (IsTurning && CurrentDestinationIndex != -1 && CurrentDestinationIndex != PathToFollow.Num() - 1)
 		speed = ComputeTargetSpeedForTurn(); // UseSlowDownForTurns_Behavior(destination, deltaTime);
 
-	GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, FString::Printf(TEXT("Velocity : %f"), speed));
+	//GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, FString::Printf(TEXT("Velocity : %f"), speed));
 
 	CurrentSpeed = FMath::Clamp(CurrentSpeed + (Acceleration * deltaTime), 0.f, speed);
 	velocity = Direction * CurrentSpeed;
@@ -395,9 +397,6 @@ float ASDTAIController::ComputeTargetSpeedForTurn()
 
 	if (CurrentDestinationIndex != 0)
 	{
-		//FVector currentDirection = PathToFollow[CurrentDestinationIndex].Location - PathToFollow[CurrentDestinationIndex - 1].Location;
-		//currentDirection.Normalize();
-
 		FVector currentDirectionStart = GetPawn()->GetActorLocation();
 		FVector currentDirectionEnd = PathToFollow[CurrentDestinationIndex];
 
@@ -406,8 +405,6 @@ float ASDTAIController::ComputeTargetSpeedForTurn()
 
 		speedFactor = 0.5f + FVector::DotProduct(currentDirection, nextDirection) / 2;
 	}
-
-	//speedFactor = (FVector::DotProduct(nextDirection, currentDirection) + 1.f) / 2.f;
 
 	return MaxSpeed * speedFactor;
 }
@@ -429,7 +426,6 @@ void ASDTAIController::ApplyVelocity(float deltaTime, FVector velocity)
 
 void ASDTAIController::MoveTowardsDirection(float deltaTime)
 {
-	GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Index : %i"), CurrentDestinationIndex));
 	if (PathToFollow.Num() > 0)
 	{
 		FVector velocity = FVector::ZeroVector;
@@ -463,8 +459,6 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
 			{
 				CurrentSpeed = 0.f;
 				CurrentDestinationIndex = -1.f;
-				
-				//IsWalking = false;
 			}
 		}
 
@@ -488,7 +482,6 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
 					float sizeJump = FVector2D(PathToFollow[CurrentDestinationIndex].Location - jumpStart).Size();
 					float distFromJumpStart = FVector2D(GetPawn()->GetActorLocation() - jumpStart).Size();
 
-					//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("distFromJumpStart : %f"), distFromJumpStart/sizeJump));
 					UpdateJump(distFromJumpStart / sizeJump, deltaTime);
 				}
 			}
@@ -503,8 +496,8 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
 				IsWalking = true;
 			}
 
-			GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Pawn Height : %f"), GetPawn()->GetActorLocation().Z));
-			GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Index : %i"), CurrentDestinationIndex));
+			//GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Pawn Height : %f"), GetPawn()->GetActorLocation().Z));
+			//GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Index : %i"), CurrentDestinationIndex));
 			ApplyVelocity(deltaTime, velocity);
 		}
 	}
@@ -513,26 +506,18 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
 
 void ASDTAIController::StartJump(float deltaTime)
 {
-	/*APawn* selfPawn = GetPawn();
-	ACharacter* character = Cast<ACharacter>(GetPawn());
-	ASDTAIController* controller = Cast<ASDTAIController>(character->GetController()); // A garder pour le moment
-	auto MovementComponent = character->GetCharacterMovement();
-
-	// Paramètre à modifier au besoin
-	MovementComponent->JumpZVelocity = 600.0f;
-	MovementComponent->DoJump(false);*/
-
 	InAir = true;
 }
 
 void ASDTAIController::UpdateJump(float curveTime, float deltaTime)
 {
+	// On met à jour la hauteur du pawn
 	float updateHeight = JumpCurve->GetFloatValue(curveTime) * JumpApexHeight;
 	FVector2D position2D(GetPawn()->GetActorLocation());
 
 	GetPawn()->SetActorLocation(FVector(position2D, BaseHeight + updateHeight));
-	//GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Pawn Height : %f"), GetPawn()->GetActorLocation().Z));
-
+	
+	// Si on est à la fin du saut, on met à jour les booleens pour l'animation
 	if (curveTime > 0.8)
 	{
 		InAir = false;
@@ -587,4 +572,5 @@ UNavigationPath* ASDTAIController::GetPathToFleeLocation()//permet de trouver le
 	}
 	//DrawDebugCircle(GetWorld(), bestFleeLocation, 100, 50, FColor::Blue, false, 10.f, 0, 5.f, FVector(1, 0, 0), FVector(0, 1, 0), false);
 	return UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), GetPawn()->GetActorLocation(), bestFleeLocation);
+
 }
