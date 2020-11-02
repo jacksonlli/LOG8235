@@ -288,7 +288,7 @@ void ASDTAIController::ComputePath(UNavigationPath* path, float deltaTime)
 	ShouldRePath = false;
 }
 
-
+// Definition de la destination de l'AI
 FVector ASDTAIController::ComputeDestination(float deltaTime)
 {
 	FVector2D position2D(GetPawn()->GetActorLocation());
@@ -329,7 +329,7 @@ void ASDTAIController::UseIntermediaryDestination_Behavior(FVector2D position2D,
 	DrawDebugSphere(GetWorld(), destination, 20.f, 20, FColor::Red);
 }
 
-
+// Handle orientation
 void ASDTAIController::UpdateDirection(float deltaTime, FVector directionGoal)
 {
 	directionGoal.Z = 0.f;
@@ -367,16 +367,14 @@ void ASDTAIController::UpdateDirection(float deltaTime, FVector directionGoal)
 	Direction = deltaRotation.RotateVector(Direction);
 }
 
-
+// Returns velocity accrding to desired velocity, acceleration and current rotation
 FVector ASDTAIController::ComputeVelocity(float deltaTime, FVector destination)
 {
 	FVector velocity = FVector::ZeroVector;
 	float speed = MaxSpeed;
 
 	if (IsTurning && CurrentDestinationIndex != -1 && CurrentDestinationIndex != PathToFollow.Num() - 1)
-		speed = ComputeTargetSpeedForTurn(); // UseSlowDownForTurns_Behavior(destination, deltaTime);
-
-	//GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, FString::Printf(TEXT("Velocity : %f"), speed));
+		speed = ComputeTargetSpeedForTurn(); 
 
 	CurrentSpeed = FMath::Clamp(CurrentSpeed + (Acceleration * deltaTime), 0.f, speed);
 	velocity = Direction * CurrentSpeed;
@@ -384,7 +382,7 @@ FVector ASDTAIController::ComputeVelocity(float deltaTime, FVector destination)
 	return velocity;
 }
 
-
+// Defines the velocity to adopt when turning
 float ASDTAIController::ComputeTargetSpeedForTurn()
 {
 	if (CurrentDestinationIndex == PathToFollow.Num() - 1)
@@ -409,7 +407,7 @@ float ASDTAIController::ComputeTargetSpeedForTurn()
 	return MaxSpeed * speedFactor;
 }
 
-
+// Move the pawn according to precalculated speed and rotation
 void ASDTAIController::ApplyVelocity(float deltaTime, FVector velocity)
 {
 	if (!velocity.IsNearlyZero())
@@ -423,7 +421,7 @@ void ASDTAIController::ApplyVelocity(float deltaTime, FVector velocity)
 	}
 }
 
-
+// Global logic for moving
 void ASDTAIController::MoveTowardsDirection(float deltaTime)
 {
 	if (PathToFollow.Num() > 0)
@@ -464,6 +462,7 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
 
 		if (CurrentDestinationIndex > 0)
 		{
+			// Handle jump
 			if (SDTUtils::HasJumpFlag(PathToFollow[CurrentDestinationIndex - 1]))
 			{
 				if (!AtJumpSegment)
@@ -496,8 +495,6 @@ void ASDTAIController::MoveTowardsDirection(float deltaTime)
 				IsWalking = true;
 			}
 
-			//GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Pawn Height : %f"), GetPawn()->GetActorLocation().Z));
-			//GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Blue, FString::Printf(TEXT("Index : %i"), CurrentDestinationIndex));
 			ApplyVelocity(deltaTime, velocity);
 		}
 	}
