@@ -84,4 +84,16 @@ protected:
     PlayerInteractionBehavior m_PlayerInteractionBehavior;
 
 // AJOUTS
+private:
+    uint8   m_targetPosBBKeyID;
+    uint8   m_isPlayerSeenBBKeyID;
+
+    //Player detection
+    FVector m_playerPos;
+    bool m_IsPlayerDetected;
+
+public:
+
+    uint8                   GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
+    uint8                   GetTargetSeenKeyID() const { return m_isPlayerSeenBBKeyID; }
 };

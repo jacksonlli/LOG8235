@@ -14,4 +14,5 @@ class SOFTDESIGNTRAINING_API UBTTask_IsPalyerDetected : public UBTTask_Blackboar
 {
 	GENERATED_BODY()
 	
+		virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

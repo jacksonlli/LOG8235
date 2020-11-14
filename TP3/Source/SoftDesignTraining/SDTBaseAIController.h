@@ -43,6 +43,9 @@ public:
     UBehaviorTreeComponent* GetBehaviorTreeComponent() const { return m_behaviorTreeComponent; }
     UBlackboardComponent* GetBlackBoardComponent() const { return m_blackboardComponent; }
 
+    //uint8                   GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
+    //uint8                   GetTargetSeenKeyID() const { return m_isPlayerSeenBBKeyID; }
+
     void                    StartBehaviorTree(APawn* pawn);
     void                    StopBehaviorTree(APawn* pawn);
 
@@ -56,4 +59,7 @@ private:
 
     UPROPERTY(transient)
         UBlackboardComponent* m_blackboardComponent;
+
+    //uint8   m_targetPosBBKeyID;
+    //uint8   m_isPlayerSeenBBKeyID;
 };
