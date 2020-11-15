@@ -88,7 +88,7 @@ private:
     uint8   m_targetPosBBKeyID;
     uint8   m_isPlayerSeenBBKeyID;
     uint8   m_isAtJumpBBKeyID;
-    uint8   m_isPlayerPoweredUpKeyID;
+    uint8   m_isPlayerPoweredUpBBKeyID;
 
     //Player detection
     FVector m_playerPos;
@@ -97,9 +97,9 @@ private:
 public:
 
     uint8           GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
-    uint8           GetTargetSeenKeyID() const { return m_isPlayerSeenBBKeyID; }
-    uint8           GetIsAtJumpKeyID() const { return m_isAtJumpBBKeyID; }
-    uint8           GetIsPlayerPoweredUpKeyID() const { return m_isPlayerPoweredUpKeyID; }
+    uint8           GetTargetSeenBBKeyID() const { return m_isPlayerSeenBBKeyID; }
+    uint8           GetIsAtJumpBBKeyID() const { return m_isAtJumpBBKeyID; }
+    uint8           GetIsPlayerPoweredUpBBKeyID() const { return m_isPlayerPoweredUpBBKeyID; }
 
     FVector         GetTargetPlayerPos() const { return m_playerPos; }
     bool            IsTargetPlayerSeen() const { return m_isPlayerDetected; }

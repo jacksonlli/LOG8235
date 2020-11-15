@@ -14,7 +14,7 @@ EBTNodeResult::Type UBTTask_IsAtJump::ExecuteTask(UBehaviorTreeComponent& OwnerC
 {
     if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()))
     {
-        if (OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Bool>(aiController->GetIsAtJumpKeyID()))
+        if (OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Bool>(aiController->GetIsAtJumpBBKeyID()))
         {
             return EBTNodeResult::Succeeded;
         }

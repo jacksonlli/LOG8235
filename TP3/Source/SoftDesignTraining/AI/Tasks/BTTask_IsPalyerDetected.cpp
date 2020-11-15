@@ -14,7 +14,7 @@ EBTNodeResult::Type UBTTask_IsPalyerDetected::ExecuteTask(UBehaviorTreeComponent
 {
     if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()))
     {
-        if (OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID()))
+        if (OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenBBKeyID()))
         {
             return EBTNodeResult::Succeeded;
         }
