@@ -4,6 +4,7 @@
 #include "BTService_TryDetectPlayer.h"
 #include "SoftDesignTraining/SDTBaseAIController.h"
 #include "SoftDesignTraining/SDTAIController.h"
+#include "SoftDesignTraining/SDTUtils.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
@@ -27,6 +28,17 @@ void UBTService_TryDetectPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uin
 
             //write to bb the position of the target
             OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPosBBKeyID(), aiController->GetTargetPlayerPos());
+
+            if (SDTUtils::IsPlayerPoweredUp(GetWorld()))
+            {
+                //write to bb that the player is powered up
+                OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetIsPlayerPoweredUpKeyID(), true);
+            }
+            else
+            {
+                //write to bb that the player is not powered up
+                OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetIsPlayerPoweredUpKeyID(), false);
+            }
         }
         else
         {

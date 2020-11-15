@@ -374,7 +374,7 @@ Sets m_IsPlayerDetected = true if player is in sight and in range
 */
 void ASDTAIController::DetectPlayer()
 {
-    m_IsPlayerDetected = false;
+    m_isPlayerDetected = false;
 
     TArray<FHitResult> allDetectionHits;
     FHitResult detectionHit;
@@ -417,7 +417,7 @@ void ASDTAIController::DetectPlayer()
 
             if (bodyPartSeen > 1)
             {
-                m_IsPlayerDetected = true;
+                m_isPlayerDetected = true;
             }
         }
     }
