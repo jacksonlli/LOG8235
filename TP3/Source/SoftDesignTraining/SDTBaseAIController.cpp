@@ -15,7 +15,7 @@ void ASDTBaseAIController::Tick(float deltaTime)
 {
     Super::Tick(deltaTime);
 
-    UpdatePlayerInteraction(deltaTime); // to be replaced with BT logic
+    UpdatePlayerInteraction(deltaTime);
 
     if (m_ReachedTarget)
     {
@@ -29,14 +29,6 @@ void ASDTBaseAIController::Tick(float deltaTime)
 
 // AJOUTS
 
-// Called when the game starts or when spawned
-void ASDTBaseAIController::BeginPlay()
-{
-    Super::BeginPlay();
-
-    StartBehaviorTree(GetPawn());
-}
-
 void ASDTBaseAIController::StartBehaviorTree(APawn* pawn)
 {
     if (ASDTBaseAIController* aiBaseCharacter = Cast<ASDTBaseAIController>(pawn))
@@ -47,16 +39,3 @@ void ASDTBaseAIController::StartBehaviorTree(APawn* pawn)
         }
     }
 }
-
-void ASDTBaseAIController::StopBehaviorTree(APawn* pawn)
-{
-    if (ASDTBaseAIController* aiBaseCharacter = Cast<ASDTBaseAIController>(pawn))
-    {
-        if (aiBaseCharacter->GetBehaviorTree())
-        {
-            m_behaviorTreeComponent->StopTree();
-        }
-    }
-}
-
-

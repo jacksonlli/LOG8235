@@ -35,19 +35,12 @@ private:
 
 // AJOUTS
 public:
-    // Called when the game starts or when spawned
-    virtual void BeginPlay() override;
-
     UBehaviorTree* GetBehaviorTree() const { return m_aiBehaviorTree; }
 
     UBehaviorTreeComponent* GetBehaviorTreeComponent() const { return m_behaviorTreeComponent; }
-    UBlackboardComponent* GetBlackBoardComponent() const { return m_blackboardComponent; }
-
-    //uint8                   GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
-    //uint8                   GetTargetSeenKeyID() const { return m_isPlayerSeenBBKeyID; }
+    UBlackboardComponent*   GetBlackBoardComponent() const { return m_blackboardComponent; }
 
     void                    StartBehaviorTree(APawn* pawn);
-    void                    StopBehaviorTree(APawn* pawn);
 
 protected:
     UPROPERTY(EditAnywhere, category = Behavior)
@@ -59,7 +52,4 @@ private:
 
     UPROPERTY(transient)
         UBlackboardComponent* m_blackboardComponent;
-
-    //uint8   m_targetPosBBKeyID;
-    //uint8   m_isPlayerSeenBBKeyID;
 };

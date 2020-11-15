@@ -94,6 +94,12 @@ private:
 
 public:
 
-    uint8                   GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
-    uint8                   GetTargetSeenKeyID() const { return m_isPlayerSeenBBKeyID; }
+    uint8           GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
+    uint8           GetTargetSeenKeyID() const { return m_isPlayerSeenBBKeyID; }
+
+    FVector         GetTargetPlayerPos() const { return m_playerPos; }
+    bool            IsTargetPlayerSeen() const { return m_IsPlayerDetected; }
+
+    virtual void    DetectPlayer();
+    virtual void    GetDetectionHits(TArray<FHitResult>& allDetectionHits, FHitResult& detectionHit);
 };

@@ -235,7 +235,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     if (AtJumpSegment)
         return;
 
-    APawn* selfPawn = GetPawn();
+    /*APawn* selfPawn = GetPawn();
     if (!selfPawn)
         return;
 
@@ -253,7 +253,12 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     GetWorld()->SweepMultiByObjectType(allDetectionHits, detectionStartLocation, detectionEndLocation, FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
 
     FHitResult detectionHit;
-    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
+    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);*/
+
+    TArray<FHitResult> allDetectionHits;
+    FHitResult detectionHit;
+
+    GetDetectionHits(allDetectionHits, detectionHit);
 
     UpdatePlayerInteractionBehavior(detectionHit, deltaTime);
 
@@ -278,8 +283,6 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     }
 
     DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Orange, 0.f, false);
-
-    DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
 }
 
 bool ASDTAIController::HasLoSOnHit(const FHitResult& hit)
@@ -308,17 +311,19 @@ void ASDTAIController::AIStateInterrupted()
     m_ReachedTarget = true;
 }
 
+
+// To be replaced with BT logic (called line 358)
 ASDTAIController::PlayerInteractionBehavior ASDTAIController::GetCurrentPlayerInteractionBehavior(const FHitResult& hit)
 {
     if (m_PlayerInteractionBehavior == PlayerInteractionBehavior_Collect)
     {
-        if (!hit.GetComponent())
+        if (!hit.GetComponent())    // si on ne voit rien
             return PlayerInteractionBehavior_Collect;
 
-        if (hit.GetComponent()->GetCollisionObjectType() != COLLISION_PLAYER)
+        if (hit.GetComponent()->GetCollisionObjectType() != COLLISION_PLAYER)   // si ce qu'on voit c'est pas le player
             return PlayerInteractionBehavior_Collect;
 
-        if (!HasLoSOnHit(hit))
+        if (!HasLoSOnHit(hit))      // si ce qui nous interesse n'est pas visible
             return PlayerInteractionBehavior_Collect;
 
         return SDTUtils::IsPlayerPoweredUp(GetWorld()) ? PlayerInteractionBehavior_Flee : PlayerInteractionBehavior_Chase;
@@ -353,7 +358,7 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>&
 
 void ASDTAIController::UpdatePlayerInteractionBehavior(const FHitResult& detectionHit, float deltaTime)
 {
-    PlayerInteractionBehavior currentBehavior = GetCurrentPlayerInteractionBehavior(detectionHit);
+    PlayerInteractionBehavior currentBehavior = GetCurrentPlayerInteractionBehavior(detectionHit); // replace with BT logic
 
     if (currentBehavior != m_PlayerInteractionBehavior)
     {
@@ -362,5 +367,85 @@ void ASDTAIController::UpdatePlayerInteractionBehavior(const FHitResult& detecti
     }
 }
 
-
 // AJOUTS
+
+/*
+Sets m_IsPlayerDetected = true if player is in sight and in range
+*/
+void ASDTAIController::DetectPlayer()
+{
+    m_IsPlayerDetected = false;
+
+    TArray<FHitResult> allDetectionHits;
+    FHitResult detectionHit;
+
+    GetDetectionHits(allDetectionHits, detectionHit);
+    UPrimitiveComponent* component = detectionHit.GetComponent();
+
+    if(component->GetCollisionObjectType() == COLLISION_PLAYER)
+    {
+        bool canSeePlayer = false;
+        FVector npcPosition = GetPawn()->GetActorLocation();
+        m_playerPos = Cast<AActor>(component)->GetActorLocation();
+        
+        FVector distToTarget = npcPosition - m_playerPos;
+        if (distToTarget.Size() < 15000.0f)
+        {
+            FVector npcHead = npcPosition + FVector::UpVector * 200.0f;
+            FVector playerHead = m_playerPos + FVector::UpVector * 200.0f;
+            FVector playerTorso = m_playerPos + FVector::UpVector * 100.0f;
+            FVector playerFeet = m_playerPos + FVector::UpVector * 25.0f;
+
+            UWorld* npcWorld = GetWorld();
+            int bodyPartSeen = 0;
+
+            if (!SDTUtils::Raycast(npcWorld, npcHead, playerHead))
+            {
+                //DrawDebugLine(npcWorld, npcHead, playerHead, FColor::Blue, false, 0.066f);
+                ++bodyPartSeen;
+            }
+            if (!SDTUtils::Raycast(npcWorld, npcHead, playerTorso))
+            {
+                //DrawDebugLine(npcWorld, npcHead, playerTorso, FColor::Blue, false, 0.066f);
+                ++bodyPartSeen;
+            }
+            if (!SDTUtils::Raycast(npcWorld, npcHead, playerFeet))
+            {
+                //DrawDebugLine(npcWorld, npcHead, playerFeet, FColor::Blue, false, 0.066f);
+                ++bodyPartSeen;
+            }
+
+            if (bodyPartSeen > 1)
+            {
+                m_IsPlayerDetected = true;
+            }
+        }
+    }
+    
+}
+
+/*
+Get all hits in range and get highest priority hit among them
+*/
+void ASDTAIController::GetDetectionHits(TArray<FHitResult>& allDetectionHits, FHitResult& detectionHit)
+{
+    APawn* selfPawn = GetPawn();
+    if (!selfPawn)
+        return;
+
+    ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+    if (!playerCharacter)
+        return;
+
+    FVector detectionStartLocation = selfPawn->GetActorLocation() + selfPawn->GetActorForwardVector() * m_DetectionCapsuleForwardStartingOffset;
+    FVector detectionEndLocation = detectionStartLocation + selfPawn->GetActorForwardVector() * m_DetectionCapsuleHalfLength * 2;
+
+    TArray<TEnumAsByte<EObjectTypeQuery>> detectionTraceObjectTypes;
+    detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_PLAYER));
+
+    GetWorld()->SweepMultiByObjectType(allDetectionHits, detectionStartLocation, detectionEndLocation, FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
+
+    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
+
+    DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
+}
