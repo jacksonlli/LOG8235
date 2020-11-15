@@ -7,6 +7,13 @@
 #include "SDTAIController.generated.h"
 
 
+UENUM(BlueprintType)
+enum class EAIBrainMode : uint8
+{
+    IfElse          UMETA(DisplayName = "IfElse_Logic"),
+    BehaviorTree 	UMETA(DisplayName = "BT_Logic")
+};
+
 /**
  * 
  */
@@ -45,7 +52,7 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     bool Landing = false;
 
-protected:
+public:
 
     enum PlayerInteractionBehavior
     {
@@ -54,6 +61,7 @@ protected:
         PlayerInteractionBehavior_Flee
     };
 
+protected:
     void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);
     void UpdatePlayerInteractionBehavior(const FHitResult& detectionHit, float deltaTime);
     PlayerInteractionBehavior GetCurrentPlayerInteractionBehavior(const FHitResult& hit);
@@ -107,4 +115,8 @@ public:
 
     virtual void    DetectPlayer();
     virtual void    GetDetectionHits(TArray<FHitResult>& allDetectionHits, FHitResult& detectionHit);
+    virtual void    SetBehavior(ASDTAIController::PlayerInteractionBehavior currentBehavior);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decision_Logic")
+        EAIBrainMode          m_currentBrainLogic = EAIBrainMode::IfElse;
 };

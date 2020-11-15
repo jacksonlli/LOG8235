@@ -231,36 +231,23 @@ void ASDTAIController::ShowNavigationPath()
 
 void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 {
-    //finish jump before updating AI state
-    if (AtJumpSegment)
-        return;
+    if (m_currentBrainLogic == EAIBrainMode::IfElse)
+    {
+        //finish jump before updating AI state
+        if (AtJumpSegment)
+            return;
 
-    /*APawn* selfPawn = GetPawn();
-    if (!selfPawn)
-        return;
+        TArray<FHitResult> allDetectionHits;
+        FHitResult detectionHit;
 
-    ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-    if (!playerCharacter)
-        return;
+        GetDetectionHits(allDetectionHits, detectionHit);
 
-    FVector detectionStartLocation = selfPawn->GetActorLocation() + selfPawn->GetActorForwardVector() * m_DetectionCapsuleForwardStartingOffset;
-    FVector detectionEndLocation = detectionStartLocation + selfPawn->GetActorForwardVector() * m_DetectionCapsuleHalfLength * 2;
-
-    TArray<TEnumAsByte<EObjectTypeQuery>> detectionTraceObjectTypes;
-    detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_PLAYER));
-
-    TArray<FHitResult> allDetectionHits;
-    GetWorld()->SweepMultiByObjectType(allDetectionHits, detectionStartLocation, detectionEndLocation, FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
-
-    FHitResult detectionHit;
-    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);*/
-
-    TArray<FHitResult> allDetectionHits;
-    FHitResult detectionHit;
-
-    GetDetectionHits(allDetectionHits, detectionHit);
-
-    UpdatePlayerInteractionBehavior(detectionHit, deltaTime);
+        UpdatePlayerInteractionBehavior(detectionHit, deltaTime);
+    }
+    else if (m_currentBrainLogic == EAIBrainMode::BehaviorTree)
+    {
+        StartBehaviorTree(GetPawn());
+    }
 
     if (GetMoveStatus() == EPathFollowingStatus::Idle)
     {
@@ -448,4 +435,12 @@ void ASDTAIController::GetDetectionHits(TArray<FHitResult>& allDetectionHits, FH
     GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
 
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
+}
+
+/*
+Sets m_PlayerInteractionBehavior to selected behavior
+*/
+void ASDTAIController::SetBehavior(ASDTAIController::PlayerInteractionBehavior currentBehavior)
+{
+    m_PlayerInteractionBehavior = currentBehavior;
 }
