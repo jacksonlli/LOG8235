@@ -425,7 +425,7 @@ void ASDTAIController::DetectPlayer()
 }
 
 /*
-Get all hits in range and get highest priority hit among them
+Gets all hits in range and gets highest priority hit among them
 */
 void ASDTAIController::GetDetectionHits(TArray<FHitResult>& allDetectionHits, FHitResult& detectionHit)
 {

@@ -87,6 +87,7 @@ protected:
 private:
     uint8   m_targetPosBBKeyID;
     uint8   m_isPlayerSeenBBKeyID;
+    uint8   m_isAtJumpBBKeyID;
 
     //Player detection
     FVector m_playerPos;
@@ -96,9 +97,11 @@ public:
 
     uint8           GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
     uint8           GetTargetSeenKeyID() const { return m_isPlayerSeenBBKeyID; }
+    uint8           GetIsAtJumpKeyID() const { return m_isAtJumpBBKeyID; }
 
     FVector         GetTargetPlayerPos() const { return m_playerPos; }
     bool            IsTargetPlayerSeen() const { return m_IsPlayerDetected; }
+    bool            IsAtJump() const { return AtJumpSegment; }
 
     virtual void    DetectPlayer();
     virtual void    GetDetectionHits(TArray<FHitResult>& allDetectionHits, FHitResult& detectionHit);
