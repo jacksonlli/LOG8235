@@ -43,11 +43,6 @@ public:
 
     void                    StartBehaviorTree(APawn* pawn);
 
-    uint8   m_targetPosBBKeyID;
-    uint8   m_isPlayerSeenBBKeyID;
-    uint8   m_isAtJumpBBKeyID;
-    uint8   m_isPlayerPoweredUpBBKeyID;
-
     uint8           GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
     uint8           GetTargetSeenBBKeyID() const { return m_isPlayerSeenBBKeyID; }
     uint8           GetIsAtJumpBBKeyID() const { return m_isAtJumpBBKeyID; }
@@ -60,6 +55,11 @@ protected:
         UBehaviorTree* m_aiBehaviorTree;
 
 private:
+    uint8   m_targetPosBBKeyID;
+    uint8   m_isPlayerSeenBBKeyID;
+    uint8   m_isAtJumpBBKeyID;
+    uint8   m_isPlayerPoweredUpBBKeyID;
+
     UPROPERTY(transient)
         UBehaviorTreeComponent* m_behaviorTreeComponent;
 

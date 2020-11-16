@@ -17,33 +17,36 @@ UBTService_TryDetectPlayer::UBTService_TryDetectPlayer()
 
 void UBTService_TryDetectPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-    if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()))
+    if (ASDTBaseAIController* aiBaseController = Cast<ASDTBaseAIController>(OwnerComp.GetAIOwner()))
     {
-        //Trigger from service the detect
-        aiController->DetectPlayer();
-        if (aiController->IsTargetPlayerSeen())
+        if (ASDTAIController* aiController = Cast<ASDTAIController>(aiBaseController))
         {
-            //write to bb that the player is seen
-            OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenBBKeyID(), true);
-
-            //write to bb the position of the target
-            OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPosBBKeyID(), aiController->GetTargetPlayerPos());
-
-            if (SDTUtils::IsPlayerPoweredUp(GetWorld()))
+            //Trigger from service the detect
+            aiController->DetectPlayer();
+            if (aiController->IsTargetPlayerSeen())
             {
-                //write to bb that the player is powered up
-                OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetIsPlayerPoweredUpBBKeyID(), true);
+                //write to bb that the player is seen
+                OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiBaseController->GetTargetSeenBBKeyID(), true);
+
+                //write to bb the position of the target
+                OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiBaseController->GetTargetPosBBKeyID(), aiController->GetTargetPlayerPos());
+
+                if (SDTUtils::IsPlayerPoweredUp(GetWorld()))
+                {
+                    //write to bb that the player is powered up
+                    OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiBaseController->GetIsPlayerPoweredUpBBKeyID(), true);
+                }
+                else
+                {
+                    //write to bb that the player is not powered up
+                    OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiBaseController->GetIsPlayerPoweredUpBBKeyID(), false);
+                }
             }
             else
             {
-                //write to bb that the player is not powered up
-                OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetIsPlayerPoweredUpBBKeyID(), false);
+                //write to bb that the player is not seen
+                OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiBaseController->GetTargetSeenBBKeyID(), false);
             }
-        }
-        else
-        {
-            //write to bb that the player is not seen
-            OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenBBKeyID(), false);
         }
     }
 }

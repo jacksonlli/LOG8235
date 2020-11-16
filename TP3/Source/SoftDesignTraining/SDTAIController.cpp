@@ -447,5 +447,9 @@ Sets m_PlayerInteractionBehavior to selected behavior
 */
 void ASDTAIController::SetBehavior(ASDTAIController::PlayerInteractionBehavior currentBehavior)
 {
-    m_PlayerInteractionBehavior = currentBehavior;
+    if (m_PlayerInteractionBehavior != currentBehavior)
+    {
+        m_PlayerInteractionBehavior = currentBehavior;
+        AIStateInterrupted();
+    }
 }
