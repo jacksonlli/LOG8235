@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AIController.h"
 // AJOUTS
+#include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "GameFramework/Character.h"
 // Generated
@@ -42,7 +43,19 @@ public:
 
     void                    StartBehaviorTree(APawn* pawn);
 
+    uint8   m_targetPosBBKeyID;
+    uint8   m_isPlayerSeenBBKeyID;
+    uint8   m_isAtJumpBBKeyID;
+    uint8   m_isPlayerPoweredUpBBKeyID;
+
+    uint8           GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
+    uint8           GetTargetSeenBBKeyID() const { return m_isPlayerSeenBBKeyID; }
+    uint8           GetIsAtJumpBBKeyID() const { return m_isAtJumpBBKeyID; }
+    uint8           GetIsPlayerPoweredUpBBKeyID() const { return m_isPlayerPoweredUpBBKeyID; }
+
 protected:
+    virtual void OnPossess(APawn* pawn) override;
+
     UPROPERTY(EditAnywhere, category = Behavior)
         UBehaviorTree* m_aiBehaviorTree;
 

@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "SDTBaseAIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "BehaviorTree/BehaviorTreeComponent.h"
 #include "SDTAIController.generated.h"
 
 
@@ -93,22 +95,11 @@ protected:
 
 // AJOUTS
 private:
-    uint8   m_targetPosBBKeyID;
-    uint8   m_isPlayerSeenBBKeyID;
-    uint8   m_isAtJumpBBKeyID;
-    uint8   m_isPlayerPoweredUpBBKeyID;
-
     //Player detection
     FVector m_playerPos;
     bool m_isPlayerDetected;
 
 public:
-
-    uint8           GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
-    uint8           GetTargetSeenBBKeyID() const { return m_isPlayerSeenBBKeyID; }
-    uint8           GetIsAtJumpBBKeyID() const { return m_isAtJumpBBKeyID; }
-    uint8           GetIsPlayerPoweredUpBBKeyID() const { return m_isPlayerPoweredUpBBKeyID; }
-
     FVector         GetTargetPlayerPos() const { return m_playerPos; }
     bool            IsTargetPlayerSeen() const { return m_isPlayerDetected; }
     bool            IsAtJump() const { return AtJumpSegment; }

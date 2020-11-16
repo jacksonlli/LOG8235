@@ -11,6 +11,10 @@
 #include "SDTUtils.h"
 #include "EngineUtils.h"
 
+// AJOUTS
+#include "GameFramework/Character.h"
+#include "SDTBaseAIController.h"
+
 ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
 {
@@ -367,44 +371,45 @@ void ASDTAIController::DetectPlayer()
     FHitResult detectionHit;
 
     GetDetectionHits(allDetectionHits, detectionHit);
-    UPrimitiveComponent* component = detectionHit.GetComponent();
-
-    if(component->GetCollisionObjectType() == COLLISION_PLAYER)
+    if (UPrimitiveComponent* component = detectionHit.GetComponent())
     {
-        bool canSeePlayer = false;
-        FVector npcPosition = GetPawn()->GetActorLocation();
-        m_playerPos = Cast<AActor>(component)->GetActorLocation();
-        
-        FVector distToTarget = npcPosition - m_playerPos;
-        if (distToTarget.Size() < 15000.0f)
+        if (component->GetCollisionObjectType() == COLLISION_PLAYER)
         {
-            FVector npcHead = npcPosition + FVector::UpVector * 200.0f;
-            FVector playerHead = m_playerPos + FVector::UpVector * 200.0f;
-            FVector playerTorso = m_playerPos + FVector::UpVector * 100.0f;
-            FVector playerFeet = m_playerPos + FVector::UpVector * 25.0f;
+            bool canSeePlayer = false;
+            FVector npcPosition = GetPawn()->GetActorLocation();
+            m_playerPos = detectionHit.GetActor()->GetActorLocation();
 
-            UWorld* npcWorld = GetWorld();
-            int bodyPartSeen = 0;
+            FVector distToTarget = npcPosition - m_playerPos;
+            if (distToTarget.Size() < 15000.0f)
+            {
+                FVector npcHead = npcPosition + FVector::UpVector * 200.0f;
+                FVector playerHead = m_playerPos + FVector::UpVector * 200.0f;
+                FVector playerTorso = m_playerPos + FVector::UpVector * 100.0f;
+                FVector playerFeet = m_playerPos + FVector::UpVector * 25.0f;
 
-            if (!SDTUtils::Raycast(npcWorld, npcHead, playerHead))
-            {
-                //DrawDebugLine(npcWorld, npcHead, playerHead, FColor::Blue, false, 0.066f);
-                ++bodyPartSeen;
-            }
-            if (!SDTUtils::Raycast(npcWorld, npcHead, playerTorso))
-            {
-                //DrawDebugLine(npcWorld, npcHead, playerTorso, FColor::Blue, false, 0.066f);
-                ++bodyPartSeen;
-            }
-            if (!SDTUtils::Raycast(npcWorld, npcHead, playerFeet))
-            {
-                //DrawDebugLine(npcWorld, npcHead, playerFeet, FColor::Blue, false, 0.066f);
-                ++bodyPartSeen;
-            }
+                UWorld* npcWorld = GetWorld();
+                int bodyPartSeen = 0;
 
-            if (bodyPartSeen > 1)
-            {
-                m_isPlayerDetected = true;
+                if (!SDTUtils::Raycast(npcWorld, npcHead, playerHead))
+                {
+                    //DrawDebugLine(npcWorld, npcHead, playerHead, FColor::Blue, false, 0.066f);
+                    ++bodyPartSeen;
+                }
+                if (!SDTUtils::Raycast(npcWorld, npcHead, playerTorso))
+                {
+                    //DrawDebugLine(npcWorld, npcHead, playerTorso, FColor::Blue, false, 0.066f);
+                    ++bodyPartSeen;
+                }
+                if (!SDTUtils::Raycast(npcWorld, npcHead, playerFeet))
+                {
+                    //DrawDebugLine(npcWorld, npcHead, playerFeet, FColor::Blue, false, 0.066f);
+                    ++bodyPartSeen;
+                }
+
+                if (bodyPartSeen > 1)
+                {
+                    m_isPlayerDetected = true;
+                }
             }
         }
     }
