@@ -98,7 +98,7 @@ private:
     //Player detection
     FVector m_playerPos;
     bool m_isPlayerDetected;
-	bool m_inGroup;
+	bool m_inGroup = false;
 	bool m_isPlayerDetectedbyGroup;
 public:
     FVector         GetTargetPlayerPos() const { return m_playerPos; }
@@ -116,5 +116,5 @@ public:
 	virtual void	EmptyGroup();
 	virtual void	RegisterAgent();
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decision_Logic")
-        EAIBrainMode          m_currentBrainLogic = EAIBrainMode::IfElse;
+        EAIBrainMode          m_currentBrainLogic = EAIBrainMode::BehaviorTree;
 };

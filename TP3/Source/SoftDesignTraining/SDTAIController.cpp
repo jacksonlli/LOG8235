@@ -268,9 +268,9 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 	{
 		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 100.f), 15.0f, 32, FColor::Green);
 	}
-	if (AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this)) {
+	/*if (AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this)) {
 		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 50.f), 15.0f, 32, FColor::Purple);
-	}
+	}*/
     switch (m_PlayerInteractionBehavior)
     {
     case PlayerInteractionBehavior_Chase:
