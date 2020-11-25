@@ -28,14 +28,25 @@ void AiAgentGroupManager::Destroy()
 void AiAgentGroupManager::RegisterAIAgent(ASDTAIController* aiAgent)
 {
 	m_registeredAgents.Add(aiAgent);
+	aiAgent->setAgentGroupStatus(true);
+
 }
 
 void AiAgentGroupManager::UnregisterAIAgents()
 {
+	int agentCount = m_registeredAgents.Num();
+	for (int i = 0; i < agentCount; ++i)
+	{
+		ASDTAIController* aiAgent = m_registeredAgents[i];
+		if (aiAgent)
+		{
+			aiAgent->setAgentGroupStatus(false);
+		}
+	}
 	m_registeredAgents.Empty();
 }
 
-bool AiAgentGroupManager::IsAIAgentInGroup(ASDTAIController* aiAgent)
+bool AiAgentGroupManager::IsAIAgentInGroup(ASDTAIController* aiAgent)//ne plus utiliser -> utiliser IsAgentInGroup() de STAIcontroller de l'agent a la place
 {
 	return m_registeredAgents.Contains(aiAgent);
 }

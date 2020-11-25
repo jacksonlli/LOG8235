@@ -26,10 +26,6 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
 void ASDTAIController::GoToBestTarget(float deltaTime)
 {
 
-	if (!AiAgentGroupManager::GetInstance()->IsPlayerSeenByGroup())
-	{
-		AiAgentGroupManager::GetInstance()->UnregisterAIAgents();
-	}
     switch (m_PlayerInteractionBehavior)
     {
     case PlayerInteractionBehavior_Collect:
@@ -40,17 +36,12 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 
     case PlayerInteractionBehavior_Chase:
 	{
-		if (!AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this))
-		{
-			AiAgentGroupManager::GetInstance()->RegisterAIAgent(this);
-		}
-		
+
 		MoveToPlayer();
 	}
         break;
 	
     case PlayerInteractionBehavior_Flee:
-		AiAgentGroupManager::GetInstance()->UnregisterAIAgents();
         MoveToBestFleeLocation();
 
         break;
@@ -272,7 +263,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     }
 
     FString debugString = "";
-	if (AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this))
+	if (m_inGroup)
 	{
 		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 100.f), 15.0f, 32, FColor::Green);
 	}
@@ -468,4 +459,13 @@ void ASDTAIController::SetBehavior(ASDTAIController::PlayerInteractionBehavior c
         m_PlayerInteractionBehavior = currentBehavior;
         AIStateInterrupted();
     }
+}
+
+
+/*
+Detects if player is seen by chase group
+*/
+void ASDTAIController::GroupDetectPlayer()
+{
+	m_isPlayerDetectedbyGroup = AiAgentGroupManager::GetInstance()->IsPlayerSeenByGroup();
 }

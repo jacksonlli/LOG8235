@@ -62,6 +62,8 @@ void ASDTBaseAIController::OnPossess(APawn* pawn)
             m_isPlayerSeenBBKeyID = m_blackboardComponent->GetKeyID("IsPlayerDetected");
             m_isAtJumpBBKeyID = m_blackboardComponent->GetKeyID("IsAtJump");
             m_isPlayerPoweredUpBBKeyID = m_blackboardComponent->GetKeyID("IsPlayerPoweredUp");
+			m_isAgentInGroupBBKeyID = m_blackboardComponent->GetKeyID("IsAgentInGroup");
+			m_isPlayerDetectedByGroupBBKeyID = m_blackboardComponent->GetKeyID("IsPlayerDetectedByGroup");
 
             //Set this agent in the BT
             m_blackboardComponent->SetValue<UBlackboardKeyType_Object>(m_blackboardComponent->GetKeyID("SelfActor"), pawn);
