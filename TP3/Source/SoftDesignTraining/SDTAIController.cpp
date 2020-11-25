@@ -20,7 +20,8 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
 {
     m_PlayerInteractionBehavior = PlayerInteractionBehavior_Collect;
-
+	m_inGroup = false;
+	m_isPlayerDetectedbyGroup = false;
 }
 
 void ASDTAIController::GoToBestTarget(float deltaTime)
@@ -267,10 +268,13 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 	{
 		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 100.f), 15.0f, 32, FColor::Green);
 	}
+	if (AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this)) {
+		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 50.f), 15.0f, 32, FColor::Purple);
+	}
     switch (m_PlayerInteractionBehavior)
     {
     case PlayerInteractionBehavior_Chase:
-        debugString = "Chase";
+		debugString = "Chase";
 		break;
     case PlayerInteractionBehavior_Flee:
         debugString = "Flee";
@@ -463,9 +467,25 @@ void ASDTAIController::SetBehavior(ASDTAIController::PlayerInteractionBehavior c
 
 
 /*
-Detects if player is seen by chase group
+Updates if player is seen by group
 */
 void ASDTAIController::GroupDetectPlayer()
 {
 	m_isPlayerDetectedbyGroup = AiAgentGroupManager::GetInstance()->IsPlayerSeenByGroup();
+}
+
+/*
+Unregisters all agents of the entire group
+*/
+void ASDTAIController::EmptyGroup()
+{
+	AiAgentGroupManager::GetInstance()->UnregisterAIAgents();
+}
+
+/*
+Registers agent into chase group
+*/
+void ASDTAIController::RegisterAgent()
+{
+	AiAgentGroupManager::GetInstance()->RegisterAIAgent(this);
 }

@@ -46,7 +46,7 @@ void AiAgentGroupManager::UnregisterAIAgents()
 	m_registeredAgents.Empty();
 }
 
-bool AiAgentGroupManager::IsAIAgentInGroup(ASDTAIController* aiAgent)//ne plus utiliser -> utiliser IsAgentInGroup() de STAIcontroller de l'agent a la place
+bool AiAgentGroupManager::IsAIAgentInGroup(ASDTAIController* aiAgent)//ne plus utiliser -> utiliser IsAgentInGroup() de SDTAIcontroller de l'agent a la place
 {
 	return m_registeredAgents.Contains(aiAgent);
 }
