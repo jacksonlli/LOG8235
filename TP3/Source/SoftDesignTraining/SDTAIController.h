@@ -99,7 +99,7 @@ private:
     FVector m_playerPos;
     bool m_isPlayerDetected;
 	bool m_inGroup = false;
-	bool m_isPlayerDetectedbyGroup;
+
 public:
     FVector         GetTargetPlayerPos() const { return m_playerPos; }
     bool            IsTargetPlayerSeen() const { return m_isPlayerDetected; }

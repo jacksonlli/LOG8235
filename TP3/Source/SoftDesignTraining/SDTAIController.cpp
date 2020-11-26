@@ -21,7 +21,6 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
 {
     m_PlayerInteractionBehavior = PlayerInteractionBehavior_Collect;
 	m_inGroup = false;
-	m_isPlayerDetectedbyGroup = false;
 }
 
 void ASDTAIController::GoToBestTarget(float deltaTime)

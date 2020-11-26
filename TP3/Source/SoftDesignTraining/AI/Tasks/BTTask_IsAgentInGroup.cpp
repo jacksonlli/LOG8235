@@ -14,7 +14,7 @@ EBTNodeResult::Type UBTTask_IsAgentInGroup::ExecuteTask(UBehaviorTreeComponent& 
 {
     if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()))
     {
-        if (OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Bool>(aiController->GetIsAgentInGroupBBKeyID()))//aiController->IsAgentInGroup())
+        if (OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Bool>(aiController->GetIsAgentInGroupBBKeyID()))
         {
             return EBTNodeResult::Succeeded;
         }

@@ -27,7 +27,6 @@ void AiAgentGroupManager::Destroy()
 
 void AiAgentGroupManager::RegisterAIAgent(ASDTAIController* aiAgent)
 {
-
 	m_registeredAgents.Add(aiAgent);
 	aiAgent->setAgentGroupStatus(true);
 }
@@ -46,11 +45,6 @@ void AiAgentGroupManager::UnregisterAIAgents()
 	m_registeredAgents.Empty();
 }
 
-bool AiAgentGroupManager::IsAIAgentInGroup(ASDTAIController* aiAgent)//ne plus utiliser -> utiliser IsAgentInGroup() de SDTAIcontroller de l'agent a la place
-{
-	return m_registeredAgents.Contains(aiAgent);
-}
-
 void AiAgentGroupManager::UpdatePlayerStatus(UWorld* World)
 {
 	//if grace period elasped without seeing player, return player not detected
@@ -67,4 +61,5 @@ void AiAgentGroupManager::UpdatePlayerStatus(UWorld* World)
 void AiAgentGroupManager::UpdateTimeStamp(UWorld* World)
 {
 	m_lastUpdatedTimeStamp = UGameplayStatics::GetRealTimeSeconds(World);//update when player is seen
+	UpdatePlayerStatus(World);
 }

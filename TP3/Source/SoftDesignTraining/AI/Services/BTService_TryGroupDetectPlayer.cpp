@@ -15,9 +15,11 @@ UBTService_TryGroupDetectPlayer::UBTService_TryGroupDetectPlayer()
 	bCreateNodeInstance = true;
 }
 
+/*
+It's more like a service to know if Player has been lost by the group
+*/
 void UBTService_TryGroupDetectPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-	
 	if (ASDTBaseAIController* aiBaseController = Cast<ASDTBaseAIController>(OwnerComp.GetAIOwner()))
 	{
 		if (ASDTAIController* aiController = Cast<ASDTAIController>(aiBaseController))
@@ -26,12 +28,12 @@ void UBTService_TryGroupDetectPlayer::TickNode(UBehaviorTreeComponent& OwnerComp
 			//Trigger from service the detect
 			if (aiController->IsPlayerDetectedByGroup())
 			{
-				//write to bb that the agent is in group
-				OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiBaseController->GetIsPlayerDetectedByGroupBBKeyID(), true);
+				//write to bb that the player is seen by the group
+				//OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiBaseController->GetIsPlayerDetectedByGroupBBKeyID(), true);
 			}
 			else
 			{
-				//write to bb that the agent is in group
+				//write to bb that the player has been lost by all the group
 				OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiBaseController->GetIsPlayerDetectedByGroupBBKeyID(), false);
 			}
 		}

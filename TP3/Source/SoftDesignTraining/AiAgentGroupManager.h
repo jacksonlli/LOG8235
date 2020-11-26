@@ -13,7 +13,6 @@ public:
 
     void RegisterAIAgent(ASDTAIController* aiAgent);
     void UnregisterAIAgents();
-	bool IsAIAgentInGroup(ASDTAIController* aiAgent);
 	void UpdatePlayerStatus(UWorld* World);
 	bool IsPlayerDetectedByGroup() { return m_isPlayerDetectedbyGroup; }
 	void UpdateTimeStamp(UWorld* World);

@@ -28,6 +28,9 @@ void UBTService_TryDetectPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uin
                 //write to bb that the player is seen
                 OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiBaseController->GetTargetSeenBBKeyID(), true);
 
+                //write to bb that the player is detected by group
+                OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiBaseController->GetIsPlayerDetectedByGroupBBKeyID(), true);
+
                 //write to bb the position of the target
                 OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiBaseController->GetTargetPosBBKeyID(), aiController->GetTargetPlayerPos());
 
