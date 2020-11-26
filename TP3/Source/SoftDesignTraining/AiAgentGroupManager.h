@@ -25,7 +25,7 @@ private:
     static AiAgentGroupManager* m_Instance;
 
     TArray<ASDTAIController*> m_registeredAgents;
-	float	  m_MaxTimeElapsedSinceSpottedPlayer = 2;//seconds
+	float	  m_MaxTimeElapsedSinceSpottedPlayer = 1;//seconds
 	float     m_lastUpdatedTimeStamp = 0;
 	bool	  m_isPlayerDetectedbyGroup = false;
 };
