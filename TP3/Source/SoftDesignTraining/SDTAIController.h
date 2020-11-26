@@ -106,9 +106,9 @@ public:
     bool            IsAtJump() const { return AtJumpSegment; }
 	bool			IsAgentInGroup() const { return m_inGroup; }
 	void			setAgentGroupStatus(bool status) { m_inGroup = status; }
-	bool			IsPlayerDetectedByGroup() { return m_isPlayerDetectedbyGroup; }
 	
 	
+	bool			IsPlayerDetectedByGroup();
 	virtual void    GroupDetectPlayer();
     virtual void    DetectPlayer();
     virtual void    GetDetectionHits(TArray<FHitResult>& allDetectionHits, FHitResult& detectionHit);

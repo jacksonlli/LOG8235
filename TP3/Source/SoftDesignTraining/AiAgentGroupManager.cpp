@@ -27,9 +27,9 @@ void AiAgentGroupManager::Destroy()
 
 void AiAgentGroupManager::RegisterAIAgent(ASDTAIController* aiAgent)
 {
+
 	m_registeredAgents.Add(aiAgent);
 	aiAgent->setAgentGroupStatus(true);
-
 }
 
 void AiAgentGroupManager::UnregisterAIAgents()
@@ -51,44 +51,20 @@ bool AiAgentGroupManager::IsAIAgentInGroup(ASDTAIController* aiAgent)//ne plus u
 	return m_registeredAgents.Contains(aiAgent);
 }
 
-bool AiAgentGroupManager::IsPlayerSeenByGroup()
+void AiAgentGroupManager::UpdatePlayerStatus(UWorld* World)
 {
-	int agentCount = m_registeredAgents.Num();
-	for (int i = 0; i < agentCount; ++i)
+	//if grace period elasped without seeing player, return player not detected
+	if (UGameplayStatics::GetRealTimeSeconds(World) > m_lastUpdatedTimeStamp + m_MaxTimeElapsedSinceSpottedPlayer)
 	{
-		ASDTAIController* aiAgent = m_registeredAgents[i];
-		if (aiAgent)
-		{
-			if (aiAgent->IsTargetPlayerSeen())
-			{
-				return true;
-			}
-		}
-
+		m_isPlayerDetectedbyGroup = false;
 	}
-	return false;
+	else
+	{
+		m_isPlayerDetectedbyGroup = true;
+	}
 }
-//TargetLKPInfo AiAgentGroupManager::GetLKPFromGroup(const FString& targetLabel, bool& targetfound)
-//{
-//	int agentCount = m_registeredAgents.Num();
-//	TargetLKPInfo outLKPInfo = TargetLKPInfo();
-//	targetfound = false;
-//
-//	for (int i = 0; i < agentCount; ++i)
-//	{
-//		AAIBase* aiAgent = m_registeredAgents[i];
-//		if (aiAgent)
-//		{
-//			const TargetLKPInfo& targetLKPInfo = aiAgent->GetCurrentTargetLKPInfo();
-//
-//				if (targetLKPInfo.GetLastUpdatedTimeStamp() > outLKPInfo.GetLastUpdatedTimeStamp())
-//				{
-//					targetfound = targetLKPInfo.GetLKPState() != TargetLKPInfo::ELKPState::LKPState_Invalid;
-//					outLKPInfo = targetLKPInfo;
-//				}
-//			
-//		}
-//	}
-//
-//	return outLKPInfo;
-//}
+
+void AiAgentGroupManager::UpdateTimeStamp(UWorld* World)
+{
+	m_lastUpdatedTimeStamp = UGameplayStatics::GetRealTimeSeconds(World);//update when player is seen
+}

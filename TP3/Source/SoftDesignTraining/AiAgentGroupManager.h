@@ -14,7 +14,10 @@ public:
     void RegisterAIAgent(ASDTAIController* aiAgent);
     void UnregisterAIAgents();
 	bool IsAIAgentInGroup(ASDTAIController* aiAgent);
-	bool IsPlayerSeenByGroup();
+	void UpdatePlayerStatus(UWorld* World);
+	bool IsPlayerDetectedByGroup() { return m_isPlayerDetectedbyGroup; }
+	void UpdateTimeStamp(UWorld* World);
+
 private:
 
     //SINGLETON
@@ -22,5 +25,7 @@ private:
     static AiAgentGroupManager* m_Instance;
 
     TArray<ASDTAIController*> m_registeredAgents;
-
+	float	  m_MaxTimeElapsedSinceSpottedPlayer = 2;//seconds
+	float     m_lastUpdatedTimeStamp = 0;
+	bool	  m_isPlayerDetectedbyGroup = false;
 };

@@ -266,7 +266,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     FString debugString = "";
 	if (m_inGroup)
 	{
-		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 100.f), 15.0f, 32, FColor::Green);
+		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 100.f), 15.0f, 32, FColor::Orange);
 	}
 	/*if (AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this)) {
 		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 50.f), 15.0f, 32, FColor::Purple);
@@ -275,16 +275,19 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     {
     case PlayerInteractionBehavior_Chase:
 		debugString = "Chase";
+		DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Orange, 0.f, false);
 		break;
     case PlayerInteractionBehavior_Flee:
         debugString = "Flee";
+		DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Purple, 0.f, false);
         break;
     case PlayerInteractionBehavior_Collect:
         debugString = "Collect";
+		DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Green, 0.f, false);
         break;
     }
 
-    DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Orange, 0.f, false);
+   
 }
 
 bool ASDTAIController::HasLoSOnHit(const FHitResult& hit)
@@ -420,6 +423,7 @@ void ASDTAIController::DetectPlayer()
                 if (bodyPartSeen > 1)
                 {
                     m_isPlayerDetected = true;
+					AiAgentGroupManager::GetInstance()->UpdateTimeStamp(GetWorld());
                 }
             }
         }
@@ -471,7 +475,15 @@ Updates if player is seen by group
 */
 void ASDTAIController::GroupDetectPlayer()
 {
-	m_isPlayerDetectedbyGroup = AiAgentGroupManager::GetInstance()->IsPlayerSeenByGroup();
+	AiAgentGroupManager::GetInstance()->UpdatePlayerStatus(GetWorld());
+}
+
+/*
+Returns if player is seen by group
+*/
+bool ASDTAIController::IsPlayerDetectedByGroup()
+{
+	return AiAgentGroupManager::GetInstance()->IsPlayerDetectedByGroup();
 }
 
 /*

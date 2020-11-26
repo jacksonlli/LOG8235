@@ -17,6 +17,7 @@ UBTService_TryGroupDetectPlayer::UBTService_TryGroupDetectPlayer()
 
 void UBTService_TryGroupDetectPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
+	
 	if (ASDTBaseAIController* aiBaseController = Cast<ASDTBaseAIController>(OwnerComp.GetAIOwner()))
 	{
 		if (ASDTAIController* aiController = Cast<ASDTAIController>(aiBaseController))
