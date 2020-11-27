@@ -36,6 +36,10 @@ private:
 
 // AJOUTS
 public:
+	double timeCPU_Detection = 0.;
+	double timeCPU_Flee = 0.;
+	double timeCPU_Collect = 0.;
+
     UBehaviorTree* GetBehaviorTree() const { return m_aiBehaviorTree; }
 
     UBehaviorTreeComponent* GetBehaviorTreeComponent() const { return m_behaviorTreeComponent; }
@@ -62,6 +66,7 @@ private:
     uint8   m_isPlayerPoweredUpBBKeyID;
 	uint8	m_isAgentInGroupBBKeyID;
 	uint8	m_isPlayerDetectedByGroupBBKeyID;
+	
 
     UPROPERTY(transient)
         UBehaviorTreeComponent* m_behaviorTreeComponent;

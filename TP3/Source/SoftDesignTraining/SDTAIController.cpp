@@ -50,6 +50,7 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 
 void ASDTAIController::MoveToRandomCollectible()
 {
+	double start = FPlatformTime::Seconds();
     float closestSqrCollectibleDistance = 18446744073709551610.f;
     ASDTCollectible* closestCollectible = nullptr;
 
@@ -75,6 +76,8 @@ void ASDTAIController::MoveToRandomCollectible()
             foundCollectibles.RemoveAt(index);
         }
     }
+	double stop = FPlatformTime::Seconds();
+	timeCPU_Collect = 1000*(stop - start);
 }
 
 void ASDTAIController::MoveToPlayer()
@@ -136,6 +139,7 @@ void ASDTAIController::OnPlayerInteractionNoLosDone()
 
 void ASDTAIController::MoveToBestFleeLocation()
 {
+	double start = FPlatformTime::Seconds();
     float bestLocationScore = 0.f;
     ASDTFleeLocation* bestFleeLocation = nullptr;
 
@@ -174,6 +178,8 @@ void ASDTAIController::MoveToBestFleeLocation()
         MoveToLocation(bestFleeLocation->GetActorLocation(), 0.5f, false, true, false, NULL, false);
         OnMoveToTarget();
     }
+	double stop = FPlatformTime::Seconds();
+	timeCPU_Flee = 1000 * (stop - start);
 }
 
 void ASDTAIController::OnMoveToTarget()
@@ -371,6 +377,7 @@ Sets m_IsPlayerDetected = true if player is in sight and in range
 */
 void ASDTAIController::DetectPlayer()
 {
+	double start = FPlatformTime::Seconds();
     m_isPlayerDetected = false;
 
     TArray<FHitResult> allDetectionHits;
@@ -420,7 +427,9 @@ void ASDTAIController::DetectPlayer()
             }
         }
     }
-    
+	double stop = FPlatformTime::Seconds();
+	timeCPU_Detection = 1000 * (stop - start);
+	
 }
 
 /*

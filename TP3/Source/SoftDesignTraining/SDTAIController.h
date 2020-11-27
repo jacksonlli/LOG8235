@@ -93,6 +93,7 @@ protected:
     FTimerHandle m_PlayerInteractionNoLosTimer;
     PlayerInteractionBehavior m_PlayerInteractionBehavior;
 
+
 // AJOUTS
 private:
     //Player detection
