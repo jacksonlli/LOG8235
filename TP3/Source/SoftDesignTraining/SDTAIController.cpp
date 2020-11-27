@@ -51,6 +51,7 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 void ASDTAIController::MoveToRandomCollectible()
 {
 	double start = FPlatformTime::Seconds();
+	double stop;
     float closestSqrCollectibleDistance = 18446744073709551610.f;
     ASDTCollectible* closestCollectible = nullptr;
 
@@ -68,6 +69,8 @@ void ASDTAIController::MoveToRandomCollectible()
         if (!collectibleActor->IsOnCooldown())
         {
             MoveToLocation(foundCollectibles[index]->GetActorLocation(), 0.5f, false, true, true, NULL, false);
+			stop = FPlatformTime::Seconds();
+			timeCPU_Collect = 1000 * (stop - start);
             OnMoveToTarget();
             return;
         }
@@ -76,8 +79,7 @@ void ASDTAIController::MoveToRandomCollectible()
             foundCollectibles.RemoveAt(index);
         }
     }
-	double stop = FPlatformTime::Seconds();
-	timeCPU_Collect = 1000*(stop - start);
+	
 }
 
 void ASDTAIController::MoveToPlayer()
