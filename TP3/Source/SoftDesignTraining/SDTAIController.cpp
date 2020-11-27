@@ -113,20 +113,11 @@ void ASDTAIController::PlayerInteractionLoSUpdate()
 
     if (hasLosOnPlayer)
     {
-        if (GetWorld()->GetTimerManager().IsTimerActive(m_PlayerInteractionNoLosTimer))
-        {
-            GetWorld()->GetTimerManager().ClearTimer(m_PlayerInteractionNoLosTimer);
-            m_PlayerInteractionNoLosTimer.Invalidate();
-            DrawDebugString(GetWorld(), FVector(0.f, 0.f, 10.f), "Got LoS", GetPawn(), FColor::Red, 5.f, false);
-        }
+        ClearTimer();
     }
     else
     {
-        if (!GetWorld()->GetTimerManager().IsTimerActive(m_PlayerInteractionNoLosTimer))
-        {
-            GetWorld()->GetTimerManager().SetTimer(m_PlayerInteractionNoLosTimer, this, &ASDTAIController::OnPlayerInteractionNoLosDone, 3.f, false);
-            DrawDebugString(GetWorld(), FVector(0.f, 0.f, 10.f), "Lost LoS", GetPawn(), FColor::Red, 5.f, false);
-        }
+        UpdateTimer();
     }
     
 }
@@ -463,6 +454,17 @@ Sets m_PlayerInteractionBehavior to selected behavior
 */
 void ASDTAIController::SetBehavior(ASDTAIController::PlayerInteractionBehavior currentBehavior)
 {
+    if (m_PlayerInteractionBehavior == PlayerInteractionBehavior_Flee)
+    {
+        UpdateTimer();
+        return;
+    }
+
+    if (currentBehavior == PlayerInteractionBehavior_Chase)
+    {
+        ClearTimer();
+    }
+
     if (m_PlayerInteractionBehavior != currentBehavior)
     {
         m_PlayerInteractionBehavior = currentBehavior;
@@ -501,4 +503,30 @@ Registers agent into chase group
 void ASDTAIController::RegisterAgent()
 {
 	AiAgentGroupManager::GetInstance()->RegisterAIAgent(this);
+}
+
+/*
+Clears the timer (used for IfElse Flee/Chase logic and for BT flee timer
+*/
+void ASDTAIController::ClearTimer()
+{
+    if (GetWorld()->GetTimerManager().IsTimerActive(m_PlayerInteractionNoLosTimer))
+    {
+        GetWorld()->GetTimerManager().ClearTimer(m_PlayerInteractionNoLosTimer);
+        m_PlayerInteractionNoLosTimer.Invalidate();
+        DrawDebugString(GetWorld(), FVector(0.f, 0.f, 10.f), "Got LoS", GetPawn(), FColor::Red, 5.f, false);
+    }
+}
+
+
+/*
+Updates the timer and handles timer overflow
+*/
+void ASDTAIController::UpdateTimer()
+{
+    if (!GetWorld()->GetTimerManager().IsTimerActive(m_PlayerInteractionNoLosTimer))
+    {
+        GetWorld()->GetTimerManager().SetTimer(m_PlayerInteractionNoLosTimer, this, &ASDTAIController::OnPlayerInteractionNoLosDone, 3.f, false);
+        //DrawDebugString(GetWorld(), FVector(0.f, 0.f, 10.f), "Lost LoS", GetPawn(), FColor::Red, 5.f, false);
+    }
 }

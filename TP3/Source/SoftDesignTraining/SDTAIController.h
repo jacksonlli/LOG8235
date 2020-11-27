@@ -100,6 +100,9 @@ private:
     bool m_isPlayerDetected;
 	bool m_inGroup = false;
 
+    virtual void    ClearTimer();
+    virtual void    UpdateTimer();
+
 public:
     FVector         GetTargetPlayerPos() const { return m_playerPos; }
     bool            IsTargetPlayerSeen() const { return m_isPlayerDetected; }
