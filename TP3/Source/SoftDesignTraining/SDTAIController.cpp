@@ -14,15 +14,18 @@
 // AJOUTS
 #include "GameFramework/Character.h"
 #include "SDTBaseAIController.h"
+#include "AiAgentGroupManager.h"
 
 ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
 {
     m_PlayerInteractionBehavior = PlayerInteractionBehavior_Collect;
+	m_inGroup = false;
 }
 
 void ASDTAIController::GoToBestTarget(float deltaTime)
 {
+
     switch (m_PlayerInteractionBehavior)
     {
     case PlayerInteractionBehavior_Collect:
@@ -32,13 +35,13 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
         break;
 
     case PlayerInteractionBehavior_Chase:
+	{
 
-        MoveToPlayer();
-
+		MoveToPlayer();
+	}
         break;
-
+	
     case PlayerInteractionBehavior_Flee:
-
         MoveToBestFleeLocation();
 
         break;
@@ -76,6 +79,7 @@ void ASDTAIController::MoveToRandomCollectible()
 
 void ASDTAIController::MoveToPlayer()
 {
+
     ACharacter * playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
     if (!playerCharacter)
         return;
@@ -259,21 +263,33 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     }
 
     FString debugString = "";
-
+	if (m_inGroup)
+	{
+		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 100.f), 15.0f, 32, FColor::Black);
+	}
+	/*if (AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this)) {
+		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 50.f), 15.0f, 32, FColor::Purple);
+	}*/
     switch (m_PlayerInteractionBehavior)
     {
     case PlayerInteractionBehavior_Chase:
-        debugString = "Chase";
-        break;
+        DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 150.f), 15.0f, 32, FColor::Orange);
+		//debugString = "Chase";
+		//DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Orange, 0.f, false);
+		break;
     case PlayerInteractionBehavior_Flee:
-        debugString = "Flee";
+        DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 150.f), 15.0f, 32, FColor::Purple);
+        //debugString = "Flee";
+		//DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Purple, 0.f, false);
         break;
     case PlayerInteractionBehavior_Collect:
-        debugString = "Collect";
+        DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 150.f), 15.0f, 32, FColor::Green);
+        //debugString = "Collect";
+		//DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Green, 0.f, false);
         break;
     }
 
-    DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Orange, 0.f, false);
+   
 }
 
 bool ASDTAIController::HasLoSOnHit(const FHitResult& hit)
@@ -409,6 +425,7 @@ void ASDTAIController::DetectPlayer()
                 if (bodyPartSeen > 1)
                 {
                     m_isPlayerDetected = true;
+					AiAgentGroupManager::GetInstance()->UpdateTimeStamp(GetWorld());
                 }
             }
         }
@@ -452,4 +469,37 @@ void ASDTAIController::SetBehavior(ASDTAIController::PlayerInteractionBehavior c
         m_PlayerInteractionBehavior = currentBehavior;
         AIStateInterrupted();
     }
+}
+
+
+/*
+Updates if player is seen by group
+*/
+void ASDTAIController::GroupDetectPlayer()
+{
+	AiAgentGroupManager::GetInstance()->UpdatePlayerStatus(GetWorld());
+}
+
+/*
+Returns if player is seen by group
+*/
+bool ASDTAIController::IsPlayerDetectedByGroup()
+{
+	return AiAgentGroupManager::GetInstance()->IsPlayerDetectedByGroup();
+}
+
+/*
+Unregisters all agents of the entire group
+*/
+void ASDTAIController::EmptyGroup()
+{
+	AiAgentGroupManager::GetInstance()->UnregisterAIAgents();
+}
+
+/*
+Registers agent into chase group
+*/
+void ASDTAIController::RegisterAgent()
+{
+	AiAgentGroupManager::GetInstance()->RegisterAIAgent(this);
 }

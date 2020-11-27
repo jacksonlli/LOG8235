@@ -98,16 +98,23 @@ private:
     //Player detection
     FVector m_playerPos;
     bool m_isPlayerDetected;
+	bool m_inGroup = false;
 
 public:
     FVector         GetTargetPlayerPos() const { return m_playerPos; }
     bool            IsTargetPlayerSeen() const { return m_isPlayerDetected; }
     bool            IsAtJump() const { return AtJumpSegment; }
-
+	bool			IsAgentInGroup() const { return m_inGroup; }
+	void			setAgentGroupStatus(bool status) { m_inGroup = status; }
+	
+	
+	bool			IsPlayerDetectedByGroup();
+	virtual void    GroupDetectPlayer();
     virtual void    DetectPlayer();
     virtual void    GetDetectionHits(TArray<FHitResult>& allDetectionHits, FHitResult& detectionHit);
     virtual void    SetBehavior(ASDTAIController::PlayerInteractionBehavior currentBehavior);
-
+	virtual void	EmptyGroup();
+	virtual void	RegisterAgent();
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decision_Logic")
-        EAIBrainMode          m_currentBrainLogic = EAIBrainMode::IfElse;
+        EAIBrainMode          m_currentBrainLogic = EAIBrainMode::BehaviorTree;
 };

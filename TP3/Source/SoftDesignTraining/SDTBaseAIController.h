@@ -47,7 +47,8 @@ public:
     uint8           GetTargetSeenBBKeyID() const { return m_isPlayerSeenBBKeyID; }
     uint8           GetIsAtJumpBBKeyID() const { return m_isAtJumpBBKeyID; }
     uint8           GetIsPlayerPoweredUpBBKeyID() const { return m_isPlayerPoweredUpBBKeyID; }
-
+	uint8			GetIsAgentInGroupBBKeyID() const { return m_isAgentInGroupBBKeyID;}
+	uint8			GetIsPlayerDetectedByGroupBBKeyID() const { return m_isPlayerDetectedByGroupBBKeyID; }
 protected:
     virtual void OnPossess(APawn* pawn) override;
 
@@ -59,6 +60,8 @@ private:
     uint8   m_isPlayerSeenBBKeyID;
     uint8   m_isAtJumpBBKeyID;
     uint8   m_isPlayerPoweredUpBBKeyID;
+	uint8	m_isAgentInGroupBBKeyID;
+	uint8	m_isPlayerDetectedByGroupBBKeyID;
 
     UPROPERTY(transient)
         UBehaviorTreeComponent* m_behaviorTreeComponent;
