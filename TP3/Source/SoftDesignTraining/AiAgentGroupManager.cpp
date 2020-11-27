@@ -3,6 +3,8 @@
 #include "AiAgentGroupManager.h"
 #include "SoftDesignTraining.h"
 
+#include "DrawDebugHelpers.h"
+
 AiAgentGroupManager* AiAgentGroupManager::m_Instance;
 
 AiAgentGroupManager::AiAgentGroupManager()
@@ -62,4 +64,28 @@ void AiAgentGroupManager::UpdateTimeStamp(UWorld* World)
 {
 	m_lastUpdatedTimeStamp = UGameplayStatics::GetRealTimeSeconds(World);//update when player is seen
 	UpdatePlayerStatus(World);
+}
+
+void AiAgentGroupManager::GetTargetPos(UWorld* World, ASDTAIController* aiAgent)
+{
+	int32 index;
+	m_registeredAgents.Find(aiAgent, index);
+
+	if (index == 0)
+		return;
+
+	float circle = 2.f * PI;
+	int numberOfPoints = m_registeredAgents.Num() - 1;
+	float angleBetweenPoints = circle / (float)numberOfPoints;
+
+	ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(World, 0);
+	FVector playerPosition = playerCharacter->GetActorLocation();
+	float radius = 250.f;
+
+	FVector aiPosition = playerPosition;
+	aiPosition.X += radius * cos(angleBetweenPoints * (index - 1));
+	aiPosition.Y += radius * sin(angleBetweenPoints * (index - 1));
+
+	DrawDebugSphere(World, aiPosition, 25.0f, 32, FColor::Red);
+
 }

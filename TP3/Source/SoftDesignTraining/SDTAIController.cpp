@@ -266,6 +266,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 	if (m_inGroup)
 	{
 		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 100.f), 15.0f, 32, FColor::Black);
+        AiAgentGroupManager::GetInstance()->GetTargetPos(GetWorld(), this);
 	}
 	/*if (AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this)) {
 		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 50.f), 15.0f, 32, FColor::Purple);

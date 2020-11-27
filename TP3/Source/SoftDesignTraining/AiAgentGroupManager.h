@@ -17,6 +17,10 @@ public:
 	bool IsPlayerDetectedByGroup() { return m_isPlayerDetectedbyGroup; }
 	void UpdateTimeStamp(UWorld* World);
 
+    void GetTargetPos(UWorld* World);
+
+    void GetTargetPos(UWorld* World, ASDTAIController* aiAgent);
+
 private:
 
     //SINGLETON
