@@ -29,7 +29,7 @@ private:
 	TArray<ASDTAIController*> m_registeredAgents;
 	int					m_nextAgent = 0;
 	bool				m_isPlayerDetectedbyGroup = false;
-	int					ShouldPrint = 10;
+	int					ShouldPrint = 0;
 
 protected:
 	// Called when the game starts or when spawned

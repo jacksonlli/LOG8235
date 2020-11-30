@@ -41,15 +41,14 @@ void ASDTBaseAIController::Tick(float deltaTime)
 
     UpdatePlayerInteraction(deltaTime);
 	
-    if (m_ReachedTarget)
-    {
-        GoToBestTarget(deltaTime);
-
-    }
-    else
-    {
-        ShowNavigationPath();
-    }
+	if (m_ReachedTarget)
+	{
+		GoToBestTarget(deltaTime);
+	}
+	else
+	{
+		ShowNavigationPath();
+	}
 }
 
 // AJOUTS

@@ -81,6 +81,7 @@ void ASDTAIController::PrintSelf(float freqUpdate)
 	/*if (AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this)) {
 		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 50.f), 15.0f, 32, FColor::Purple);
 	}*/
+
 }
 
 void ASDTAIController::MoveToRandomCollectible()
@@ -260,11 +261,11 @@ void ASDTAIController::ShowNavigationPath()
 
             for (int i = 0; i < pathPoints.Num(); ++i)
             {
-                DrawDebugSphere(GetWorld(), pathPoints[i].Location, 10.f, 8, FColor::Yellow);
+                DrawDebugSphere(GetWorld(), pathPoints[i].Location, 10.f, 8, FColor::Yellow, false, 0.1);
 
                 if (i != 0)
                 {
-                    DrawDebugLine(GetWorld(), pathPoints[i].Location, pathPoints[i - 1].Location, FColor::Yellow);
+                    DrawDebugLine(GetWorld(), pathPoints[i].Location, pathPoints[i - 1].Location, FColor::Yellow, false, 0.1);
                 }
             }
         }
