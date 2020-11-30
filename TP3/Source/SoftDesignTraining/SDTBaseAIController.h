@@ -23,6 +23,7 @@ public:
 
     ASDTBaseAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
     virtual void Tick(float deltaTime) override;
+    virtual void BeginPlay() override;
 	
 protected:
     virtual void RotationUpdate(float deltaTime) {};

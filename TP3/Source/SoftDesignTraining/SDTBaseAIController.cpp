@@ -6,17 +6,34 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Object.h"
 #include "DrawDebugHelpers.h"
+#include "AAI_CPU_Manager.h"
 
 ASDTBaseAIController::ASDTBaseAIController(const FObjectInitializer& ObjectInitializer)
     :Super(ObjectInitializer)
 {
-    PrimaryActorTick.bCanEverTick = true;
-    PrimaryActorTick.bStartWithTickEnabled = true;
+    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bStartWithTickEnabled = false;
     m_ReachedTarget = true;
 
     m_behaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
     m_blackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackboardComponent"));
 }
+
+void ASDTBaseAIController::BeginPlay()
+{
+    Super::BeginPlay();
+
+    TArray<AActor*> groupCPU;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAAI_CPU_Manager::StaticClass(), groupCPU);
+
+    ASDTAIController* agent = Cast<ASDTAIController>(this);
+    AAAI_CPU_Manager* CPU_manager = Cast<AAAI_CPU_Manager>(groupCPU[0]);
+    if (CPU_manager)
+    {
+        CPU_manager->RegisterAIAgent(agent);
+    }
+}
+
 
 void ASDTBaseAIController::Tick(float deltaTime)
 {
