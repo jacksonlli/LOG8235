@@ -48,6 +48,41 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     }
 }
 
+void ASDTAIController::PrintSelf(float freqUpdate)
+{
+	FString debugString = "";
+	FColor  stringColor;
+	DrawDebugString(GetWorld(), FVector(0.f, 0.f, 150.f), FString::Printf(TEXT("CPU Detect : %0.4f"), timeCPU_Detection), GetPawn(), FColor::Blue, freqUpdate, false);
+	DrawDebugString(GetWorld(), FVector(0.f, 0.f, 300.f), FString::Printf(TEXT("CPU Flee : %0.4f"), timeCPU_Flee), GetPawn(), FColor::Blue, freqUpdate, false);
+	DrawDebugString(GetWorld(), FVector(0.f, 0.f, 450.f), FString::Printf(TEXT("CPU Collect : %0.4f"), timeCPU_Collect), GetPawn(), FColor::Blue, freqUpdate, false);
+	switch (m_PlayerInteractionBehavior)
+	{
+	case PlayerInteractionBehavior_Chase:
+		debugString = "Chase";
+		stringColor = FColor::Orange;
+		break;
+	case PlayerInteractionBehavior_Flee:
+		debugString = "Flee";
+		stringColor = FColor::Purple;
+		break;
+	case PlayerInteractionBehavior_Collect:
+		debugString = "Collect";
+		stringColor = FColor::Green;
+		break;
+	}
+
+	//DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 150.f), 15.0f, 32, stringColor);
+	DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), stringColor, freqUpdate, false);
+
+	if (m_inGroup)
+	{
+		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 100.f), 15.0f, 32, FColor::Black, false, freqUpdate);
+	}
+	/*if (AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this)) {
+		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 50.f), 15.0f, 32, FColor::Purple);
+	}*/
+}
+
 void ASDTAIController::MoveToRandomCollectible()
 {
 	double start = FPlatformTime::Seconds();
@@ -261,33 +296,8 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
         m_ReachedTarget = true;
     }
 
-    FString debugString = "";
-    FColor  stringColor;
-	if (m_inGroup)
-	{
-		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 100.f), 15.0f, 32, FColor::Black);
-	}
-	/*if (AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this)) {
-		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 50.f), 15.0f, 32, FColor::Purple);
-	}*/
-    switch (m_PlayerInteractionBehavior)
-    {
-    case PlayerInteractionBehavior_Chase:
-		debugString = "Chase";
-        stringColor = FColor::Orange;
-		break;
-    case PlayerInteractionBehavior_Flee:
-        debugString = "Flee";
-        stringColor = FColor::Purple;
-        break;
-    case PlayerInteractionBehavior_Collect:
-        debugString = "Collect";
-        stringColor = FColor::Green;
-        break;
-    }
+   
 
-    //DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 150.f), 15.0f, 32, stringColor);
-    DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), stringColor, 0.f, false);
 }
 
 bool ASDTAIController::HasLoSOnHit(const FHitResult& hit)

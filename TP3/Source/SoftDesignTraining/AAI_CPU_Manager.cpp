@@ -35,6 +35,15 @@ void AAAI_CPU_Manager::Tick(float deltaTime)
 
 	if (agentCount > 0)
 	{
+		if (ShouldPrint == 0)
+		{
+			ShouldPrint = 10;
+			for (ASDTAIController* agent : m_registeredAgents)
+			{
+				agent->PrintSelf(ShouldPrint*deltaTime);
+			}
+		}
+		ShouldPrint = ShouldPrint - 1;
 		while (FPlatformTime::Seconds() - start < 0.001 && nb_agents_maj < m_registeredAgents.Num())
 		{
 			if (m_nextAgent < m_registeredAgents.Num())

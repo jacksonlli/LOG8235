@@ -80,6 +80,7 @@ public:
     void RotateTowards(const FVector& targetLocation);
     void SetActorLocation(const FVector& targetLocation);
     void AIStateInterrupted();
+	void PrintSelf(float freqUpdate);
 
 private:
     virtual void GoToBestTarget(float deltaTime) override;

@@ -50,10 +50,6 @@ void ASDTBaseAIController::Tick(float deltaTime)
     {
         ShowNavigationPath();
     }
-	DrawDebugString(GetWorld(), FVector(0.f, 0.f, 150.f), FString::Printf(TEXT("CPU Detect : %0.4f"), timeCPU_Detection), GetPawn(), FColor::Blue, deltaTime, false);
-	DrawDebugString(GetWorld(), FVector(0.f, 0.f, 300.f), FString::Printf(TEXT("CPU Flee : %0.4f"), timeCPU_Flee), GetPawn(), FColor::Blue, deltaTime, false);
-	DrawDebugString(GetWorld(), FVector(0.f, 0.f, 450.f), FString::Printf(TEXT("CPU Collect : %0.4f"), timeCPU_Collect), GetPawn(), FColor::Blue, deltaTime, false);
-
 }
 
 // AJOUTS
