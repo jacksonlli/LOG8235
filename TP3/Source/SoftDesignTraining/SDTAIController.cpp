@@ -37,7 +37,7 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     case PlayerInteractionBehavior_Chase:
 	{
 
-		MoveToPlayer();
+		//MoveToPlayer();
 	}
         break;
 	
@@ -85,6 +85,19 @@ void ASDTAIController::MoveToPlayer()
         return;
 
     MoveToActor(playerCharacter, 0.5f, false, true, true, NULL, false);
+    //MoveToLocation(playerCharacter->GetActorLocation(), 0.5f, false, true, true, NULL, false);
+    OnMoveToTarget();
+}
+
+void ASDTAIController::MoveToTargetPosition()
+{
+
+    ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+    if (!playerCharacter)
+        return;
+
+     //MoveToActor((AActor) AiAgentGroupManager::GetInstance()->GetTargetPos(GetWorld(), this), 0.5f, false, true, true, NULL, false);
+    MoveToLocation(AiAgentGroupManager::GetInstance()->GetTargetPos(GetWorld(), this), 0.5f, false, true, true, NULL, false, true);
     OnMoveToTarget();
 }
 
@@ -266,7 +279,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 	if (m_inGroup)
 	{
 		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 100.f), 15.0f, 32, FColor::Black);
-        AiAgentGroupManager::GetInstance()->GetTargetPos(GetWorld(), this);
+       // AiAgentGroupManager::GetInstance()->GetTargetPos(GetWorld(), this);
 	}
 	/*if (AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this)) {
 		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 50.f), 15.0f, 32, FColor::Purple);
@@ -274,7 +287,24 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     switch (m_PlayerInteractionBehavior)
     {
     case PlayerInteractionBehavior_Chase:
-        DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 150.f), 15.0f, 32, FColor::Orange);
+    {   DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 150.f), 15.0f, 32, FColor::Orange);
+
+        //Ajout CSD
+
+        ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+        FVector playerPosition = playerCharacter->GetActorLocation();
+        debugString = FString::FromInt(AiAgentGroupManager::GetInstance()->GetIndex(this));
+        DrawDebugString(GetWorld(), GetPawn()->GetActorLocation(), debugString, GetPawn(), FColor::Orange, 0.f, false);
+        if (AiAgentGroupManager::GetInstance()->GetIndex(this) == 0 || (this->GetPawn()->GetActorLocation() - playerPosition).Size() < 250.f)
+        {
+           MoveToPlayer();
+        }
+        else
+        {
+            MoveToTargetPosition();
+        }
+    }
+
 		//debugString = "Chase";
 		//DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Orange, 0.f, false);
 		break;

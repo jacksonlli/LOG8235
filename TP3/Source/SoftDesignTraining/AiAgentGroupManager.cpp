@@ -29,7 +29,7 @@ void AiAgentGroupManager::Destroy()
 
 void AiAgentGroupManager::RegisterAIAgent(ASDTAIController* aiAgent)
 {
-	m_registeredAgents.Add(aiAgent);
+	m_registeredAgents.AddUnique(aiAgent);
 	aiAgent->setAgentGroupStatus(true);
 }
 
@@ -66,13 +66,13 @@ void AiAgentGroupManager::UpdateTimeStamp(UWorld* World)
 	UpdatePlayerStatus(World);
 }
 
-void AiAgentGroupManager::GetTargetPos(UWorld* World, ASDTAIController* aiAgent)
+FVector AiAgentGroupManager::GetTargetPos(UWorld* World, ASDTAIController* aiAgent)
 {
 	int32 index;
 	m_registeredAgents.Find(aiAgent, index);
 
-	if (index == 0)
-		return;
+	//if (index == 0)
+	//	return;
 
 	float circle = 2.f * PI;
 	int numberOfPoints = m_registeredAgents.Num() - 1;
@@ -82,10 +82,19 @@ void AiAgentGroupManager::GetTargetPos(UWorld* World, ASDTAIController* aiAgent)
 	FVector playerPosition = playerCharacter->GetActorLocation();
 	float radius = 250.f;
 
-	FVector aiPosition = playerPosition;
-	aiPosition.X += radius * cos(angleBetweenPoints * (index - 1));
-	aiPosition.Y += radius * sin(angleBetweenPoints * (index - 1));
+	FVector targetPosition = playerPosition;
+	targetPosition.X += radius * cos(angleBetweenPoints * (index - 1));
+	targetPosition.Y += radius * sin(angleBetweenPoints * (index - 1));
 
-	DrawDebugSphere(World, aiPosition, 25.0f, 32, FColor::Red);
+	DrawDebugSphere(World, targetPosition, 25.0f, 32, FColor::Red);
 
+	return targetPosition;
+}
+
+int AiAgentGroupManager::GetIndex(ASDTAIController* aiAgent)
+{
+	int32 index;
+	m_registeredAgents.Find(aiAgent, index);
+
+	return index;
 }

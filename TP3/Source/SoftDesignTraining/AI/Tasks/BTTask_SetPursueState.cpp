@@ -5,6 +5,7 @@
 #include "SoftDesignTraining/SDTBaseAIController.h"
 #include "SoftDesignTraining/SDTAIController.h"
 
+
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Vector.h"
@@ -16,6 +17,7 @@ EBTNodeResult::Type UBTTask_SetPursueState::ExecuteTask(UBehaviorTreeComponent& 
     {
         ASDTAIController::PlayerInteractionBehavior currentBehavior = ASDTAIController::PlayerInteractionBehavior::PlayerInteractionBehavior_Chase;
         aiController->SetBehavior(currentBehavior);
+
     }
 
     return EBTNodeResult::Succeeded;

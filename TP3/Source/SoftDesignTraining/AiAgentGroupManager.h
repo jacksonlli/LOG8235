@@ -2,6 +2,8 @@
 #include "SDTAIController.h"
 #include "CoreMinimal.h"
 
+#include "SoftDesignTraining.h"
+
 /**
  * 
  */
@@ -19,7 +21,10 @@ public:
 
     void GetTargetPos(UWorld* World);
 
-    void GetTargetPos(UWorld* World, ASDTAIController* aiAgent);
+    //void GetTargetPos(UWorld* World, ASDTAIController* aiAgent);
+    FVector GetTargetPos(UWorld* World, ASDTAIController* aiAgent);
+
+    int GetIndex(ASDTAIController* aiAgent);
 
 private:
 
