@@ -12,6 +12,7 @@
 
 EBTNodeResult::Type UBTTask_RegisterAgent::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
+    //register the agent into the chase group
     if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()))
     {
         aiController->RegisterAgent();

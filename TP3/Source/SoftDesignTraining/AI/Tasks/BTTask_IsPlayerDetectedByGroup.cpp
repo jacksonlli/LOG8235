@@ -14,6 +14,7 @@ EBTNodeResult::Type UBTTask_IsPlayerDetectedByGroup::ExecuteTask(UBehaviorTreeCo
 {
     if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()))
     {
+        //check if the player is detected by the group
         if (OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Bool>(aiController->GetIsPlayerDetectedByGroupBBKeyID()))
         {
             return EBTNodeResult::Succeeded;

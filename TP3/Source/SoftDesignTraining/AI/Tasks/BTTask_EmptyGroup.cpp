@@ -12,6 +12,7 @@
 
 EBTNodeResult::Type UBTTask_EmptyGroup::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
+    //empty group
     if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()))
     {
         aiController->EmptyGroup();

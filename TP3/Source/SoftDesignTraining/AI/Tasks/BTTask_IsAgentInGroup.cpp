@@ -14,6 +14,7 @@ EBTNodeResult::Type UBTTask_IsAgentInGroup::ExecuteTask(UBehaviorTreeComponent& 
 {
     if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()))
     {
+        //check if agent is in the chase group
         if (OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Bool>(aiController->GetIsAgentInGroupBBKeyID()))
         {
             return EBTNodeResult::Succeeded;

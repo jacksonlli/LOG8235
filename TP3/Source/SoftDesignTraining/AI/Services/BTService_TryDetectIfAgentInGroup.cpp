@@ -29,7 +29,7 @@ void UBTService_TryDetectIfAgentInGroup::TickNode(UBehaviorTreeComponent& OwnerC
 			}
 			else
 			{
-				//write to bb that the agent is in group
+				//write to bb that the agent is not in group
 				OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiBaseController->GetIsAgentInGroupBBKeyID(), false);
 			}
 		}
