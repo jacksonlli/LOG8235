@@ -22,14 +22,12 @@ public:
 
 	void RegisterAIAgent(ASDTAIController* aiAgent);
 	void UnregisterAIAgents();
-	bool IsPlayerDetectedByGroup() { return m_isPlayerDetectedbyGroup; }
 
 private:
 
 	TArray<ASDTAIController*> m_registeredAgents;
-	int					m_nextAgent = 0;
-	bool				m_isPlayerDetectedbyGroup = false;
-	int					ShouldPrint = 0;
+	int					m_nextAgent = 0; // Next agent to update
+	int					ShouldPrint = 0; // Which group of agent will be printed this frame
 
 protected:
 	// Called when the game starts or when spawned

@@ -80,7 +80,7 @@ public:
     void RotateTowards(const FVector& targetLocation);
     void SetActorLocation(const FVector& targetLocation);
     void AIStateInterrupted();
-	void PrintSelf(float freqUpdate);
+	void PrintSelf(float freqUpdate); // Print debug informations for the agent
 
 private:
     virtual void GoToBestTarget(float deltaTime) override;
@@ -100,7 +100,7 @@ private:
     //Player detection
     FVector m_playerPos;
     bool m_isPlayerDetected;
-	bool m_inGroup = false;
+	bool m_inGroup = false; // Is the agent in a chase group
 
     virtual void    ClearTimer();
     virtual void    UpdateTimer();

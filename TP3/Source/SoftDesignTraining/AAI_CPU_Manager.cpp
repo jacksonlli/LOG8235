@@ -39,6 +39,7 @@ void AAAI_CPU_Manager::Tick(float deltaTime)
 		{
 			ShouldPrint = 0;
 		}
+		// Update the debug of a fraction of the agents each frame
 		for (int i = 8*ShouldPrint; i < 8*ShouldPrint+7; ++i)
 		{
 			if (i < m_registeredAgents.Num())
@@ -48,6 +49,7 @@ void AAAI_CPU_Manager::Tick(float deltaTime)
 			}
 		}
 		ShouldPrint = ShouldPrint + 1;
+		// While there is time left for this frame, update next agent
 		while (FPlatformTime::Seconds() - start < 0.01 && nb_agents_maj < m_registeredAgents.Num())
 		{
 			if (m_nextAgent < m_registeredAgents.Num())

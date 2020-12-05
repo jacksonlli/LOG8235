@@ -37,6 +37,7 @@ private:
 
 // AJOUTS
 public:
+	// Differents times taken by the functions 
 	double timeCPU_Detection = 0.;
 	double timeCPU_Flee = 0.;
 	double timeCPU_Collect = 0.;
@@ -61,6 +62,7 @@ protected:
         UBehaviorTree* m_aiBehaviorTree;
 
 private:
+	// Variables of the blackboard
     uint8   m_targetPosBBKeyID;
     uint8   m_isPlayerSeenBBKeyID;
     uint8   m_isAtJumpBBKeyID;

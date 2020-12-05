@@ -328,7 +328,7 @@ void ASDTAIController::AIStateInterrupted()
 }
 
 
-// To be replaced with BT logic (called line 358)
+// Unused : replaced with BT logic (called line 477)
 ASDTAIController::PlayerInteractionBehavior ASDTAIController::GetCurrentPlayerInteractionBehavior(const FHitResult& hit)
 {
     if (m_PlayerInteractionBehavior == PlayerInteractionBehavior_Collect)
