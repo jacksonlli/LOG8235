@@ -47,7 +47,9 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
         break;
     }
 }
-
+/*
+Called every 8 frames. Shows state, CPU and if the agent is in a group
+*/
 void ASDTAIController::PrintSelf(float freqUpdate)
 {
 	FString debugString = "";
@@ -71,17 +73,13 @@ void ASDTAIController::PrintSelf(float freqUpdate)
 		break;
 	}
 
-	//DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 150.f), 15.0f, 32, stringColor);
 	DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), stringColor, freqUpdate, false);
 
+    // If the agent belongs to a group, show a black sphere above him
 	if (m_inGroup)
 	{
 		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 100.f), 15.0f, 32, FColor::Black, false, freqUpdate);
 	}
-	/*if (AiAgentGroupManager::GetInstance()->IsAIAgentInGroup(this)) {
-		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector(0.f, 0.f, 50.f), 15.0f, 32, FColor::Purple);
-	}*/
-
 }
 
 void ASDTAIController::MoveToRandomCollectible()

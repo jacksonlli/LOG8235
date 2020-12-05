@@ -23,6 +23,7 @@ void ASDTBaseAIController::BeginPlay()
 {
     Super::BeginPlay();
 
+    // Register the agent into the CPU Manager
     TArray<AActor*> groupCPU;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAAI_CPU_Manager::StaticClass(), groupCPU);
 
