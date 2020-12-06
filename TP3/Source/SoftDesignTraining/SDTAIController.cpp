@@ -37,7 +37,7 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     case PlayerInteractionBehavior_Chase:
 	{
 
-		MoveToPlayer();
+		//MoveToPlayer();
 	}
         break;
 	
@@ -113,7 +113,6 @@ void ASDTAIController::MoveToRandomCollectible()
             foundCollectibles.RemoveAt(index);
         }
     }
-	
 }
 
 void ASDTAIController::MoveToPlayer()
@@ -124,6 +123,18 @@ void ASDTAIController::MoveToPlayer()
         return;
 
     MoveToActor(playerCharacter, 0.5f, false, true, true, NULL, false);
+    OnMoveToTarget();
+}
+
+void ASDTAIController::MoveToTargetPosition()
+{
+
+    ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+    if (!playerCharacter)
+        return;
+
+     //MoveToActor((AActor) AiAgentGroupManager::GetInstance()->GetTargetPos(GetWorld(), this), 0.5f, false, true, true, NULL, false);
+    MoveToLocation(AiAgentGroupManager::GetInstance()->GetTargetPos(GetWorld(), this), 0.5f, false, true, true, NULL, false, true);
     OnMoveToTarget();
 }
 

@@ -2,6 +2,8 @@
 #include "SDTAIController.h"
 #include "CoreMinimal.h"
 
+#include "SoftDesignTraining.h"
+
 /**
  * 
  */
@@ -17,6 +19,13 @@ public:
 	bool IsPlayerDetectedByGroup() { return m_isPlayerDetectedbyGroup; }
 	void UpdateTimeStamp(UWorld* World);
 
+    void GetTargetPos(UWorld* World);
+
+    //void GetTargetPos(UWorld* World, ASDTAIController* aiAgent);
+    FVector GetTargetPos(UWorld* World, ASDTAIController* aiAgent);
+
+    int GetIndex(ASDTAIController* aiAgent);
+
 private:
 
     //SINGLETON
@@ -24,7 +33,7 @@ private:
     static AiAgentGroupManager* m_Instance;
 
     TArray<ASDTAIController*> m_registeredAgents;
-	float	  m_MaxTimeElapsedSinceSpottedPlayer = 1;//seconds
+	float	  m_MaxTimeElapsedSinceSpottedPlayer = 0;//seconds
 	float     m_lastUpdatedTimeStamp = 0;
 	bool	  m_isPlayerDetectedbyGroup = false;
 };

@@ -63,13 +63,14 @@ public:
         PlayerInteractionBehavior_Flee
     };
 
-protected:
+public:
     void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);
     void UpdatePlayerInteractionBehavior(const FHitResult& detectionHit, float deltaTime);
     PlayerInteractionBehavior GetCurrentPlayerInteractionBehavior(const FHitResult& hit);
     bool HasLoSOnHit(const FHitResult& hit);
     void MoveToRandomCollectible();
     void MoveToPlayer();
+    void MoveToTargetPosition();
     void MoveToBestFleeLocation();
     void PlayerInteractionLoSUpdate();
     void OnPlayerInteractionNoLosDone();
