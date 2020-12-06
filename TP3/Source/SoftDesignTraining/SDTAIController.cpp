@@ -483,6 +483,19 @@ void ASDTAIController::SetBehavior(ASDTAIController::PlayerInteractionBehavior c
     if (currentBehavior == PlayerInteractionBehavior_Chase)
     {
         ClearTimer();
+
+        //Ajout CSD
+
+        ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+        FVector playerPosition = playerCharacter->GetActorLocation();
+        if (AiAgentGroupManager::GetInstance()->GetIndex(this) == 0 || (this->GetPawn()->GetActorLocation() - playerPosition).Size() < 300.f)
+        {
+            MoveToPlayer();
+        }
+        else
+        {
+            MoveToTargetPosition();
+        }
     }
 
     if (m_PlayerInteractionBehavior != currentBehavior)
