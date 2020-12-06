@@ -295,7 +295,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
         FVector playerPosition = playerCharacter->GetActorLocation();
         debugString = FString::FromInt(AiAgentGroupManager::GetInstance()->GetIndex(this));
         DrawDebugString(GetWorld(), GetPawn()->GetActorLocation(), debugString, GetPawn(), FColor::Orange, 0.f, false);
-        if (AiAgentGroupManager::GetInstance()->GetIndex(this) == 0 || (this->GetPawn()->GetActorLocation() - playerPosition).Size() < 250.f)
+        if (AiAgentGroupManager::GetInstance()->GetIndex(this) == 0 || (this->GetPawn()->GetActorLocation() - playerPosition).Size() < 300.f)
         {
            MoveToPlayer();
         }
