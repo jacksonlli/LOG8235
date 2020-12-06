@@ -50,7 +50,7 @@ void AAAI_CPU_Manager::Tick(float deltaTime)
 		}
 		ShouldPrint = ShouldPrint + 1;
 		// While there is time left for this frame, update next agent
-		while (FPlatformTime::Seconds() - start < 0.01 && nb_agents_maj < m_registeredAgents.Num())
+		while (FPlatformTime::Seconds() - start < 0.001 && nb_agents_maj < m_registeredAgents.Num())
 		{
 			if (m_nextAgent < m_registeredAgents.Num())
 			{
